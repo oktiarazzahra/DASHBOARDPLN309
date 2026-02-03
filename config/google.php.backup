@@ -1,0 +1,34 @@
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Google Sheets Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Konfigurasi untuk Google Sheets API
+    |
+    */
+
+    'service_account_credentials' => env('GOOGLE_SERVICE_ACCOUNT_JSON_PATH', storage_path('app/google/service-account.json')),
+
+    'sheets' => [
+        'spreadsheet_id' => env('GOOGLE_SPREADSHEET_ID', ''),
+        'sheet_name' => env('GOOGLE_SHEET_NAME', 'Sheet1'),
+        'customer_sheet_name' => env('GOOGLE_CUSTOMER_SHEET_NAME', 'jumlah pelanggan'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sync Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Konfigurasi untuk auto sync
+    |
+    */
+    
+    'auto_sync' => [
+        'enabled' => env('GOOGLE_SHEETS_AUTO_SYNC', false),
+        'interval' => env('GOOGLE_SHEETS_SYNC_INTERVAL', '*/15'), // Setiap 15 menit
+    ],
+];

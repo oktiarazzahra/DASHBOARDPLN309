@@ -42,6 +42,8 @@ class TarifCustomerSheetsService
         // Skip rows yang hanya berisi "II" atau "III" (continuation)
         // Skip rows yang berisi "JUMLAH" (subtotal)
         
+        $rowOrder = 0; // Counter untuk urutan row
+        
         foreach ($values as $index => $row) {
             // Skip header rows (0-4)
             if ($index < 4) {
@@ -65,6 +67,9 @@ class TarifCustomerSheetsService
                 continue;
             }
             
+            // Increment row order
+            $rowOrder++;
+            
             // Ekstrak kategori dari nama tarif (S1, R1, B1, I1, P1, T, C, L)
             $category = $this->extractCategory($tarifName);
             
@@ -83,6 +88,7 @@ class TarifCustomerSheetsService
                     'tarif_code' => $tarifCode,
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
+                    'row_order' => $rowOrder,
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,

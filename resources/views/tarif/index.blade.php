@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard PLN 309 Per Tarif</title>
+    <title>Data Pengusahaan 309 - Per Tarif</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -126,19 +126,26 @@
     <nav class="navbar">
         <div class="container-fluid px-4">
             <a class="navbar-brand" href="#">
-                <i class="bi bi-lightning-charge-fill"></i> Dashboard PLN 309
+                <i class="bi bi-lightning-charge-fill"></i> Data Pengusahaan 309
             </a>
             <div class="d-flex align-items-center gap-3">
                 <!-- Tab Navigation -->
                 <ul class="nav nav-tabs mb-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/?year={{ $year }}">Per ULP</a>
+                        <a class="nav-link" href="/?year={{ $year }}">
+                            <i class="bi bi-geo-alt-fill"></i> Per ULP
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/tarif?year={{ $year }}">309 Per Tarif</a>
+                        <a class="nav-link active" href="/tarif?year={{ $year }}">
+                            <i class="bi bi-tags-fill"></i> 309 Per Tarif
+                        </a>
                     </li>
                 </ul>
                 
+                <span style="color: rgba(255,255,255,0.9); font-size: 0.875rem; font-weight: 500;">
+                    <i class="bi bi-calendar3"></i> Tahun:
+                </span>
                 <select id="yearSelector" class="form-select" style="width: 110px; padding: 0.4rem 0.75rem; font-size: 0.875rem; border-radius: 8px;" onchange="changeYear(this.value)">
                     @foreach($availableYears as $availableYear)
                     <option value="{{ $availableYear }}" {{ $availableYear == $year ? 'selected' : '' }}>{{ $availableYear }}</option>
@@ -149,30 +156,49 @@
     </nav>
 
     <div class="container-fluid px-4 py-3">
-        <!-- Month Filter -->
+        <!-- Month and ULP Filter -->
         <div class="row mb-3">
             <div class="col-12">
                 <div class="d-flex align-items-center gap-3 p-3" style="background: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                     <span style="color: #00695c; font-size: 1rem; font-weight: 700;">
-                        <i class="bi bi-funnel-fill"></i> Filter Bulan:
+                        <i class="bi bi-funnel-fill"></i> Filter:
                     </span>
-                    <select id="monthSelector" class="form-select" style="width: 150px; padding: 0.6rem 0.9rem; font-size: 0.875rem; border: 2px solid #b2dfdb; border-radius: 8px; font-weight: 600; color: #00695c; background: #e0f2f1;">
-                        <option value="">Semua Bulan</option>
-                        <option value="0" {{ $month == '0' ? 'selected' : '' }}>Januari</option>
-                        <option value="1" {{ $month == '1' ? 'selected' : '' }}>Februari</option>
-                        <option value="2" {{ $month == '2' ? 'selected' : '' }}>Maret</option>
-                        <option value="3" {{ $month == '3' ? 'selected' : '' }}>April</option>
-                        <option value="4" {{ $month == '4' ? 'selected' : '' }}>Mei</option>
-                        <option value="5" {{ $month == '5' ? 'selected' : '' }}>Juni</option>
-                        <option value="6" {{ $month == '6' ? 'selected' : '' }}>Juli</option>
-                        <option value="7" {{ $month == '7' ? 'selected' : '' }}>Agustus</option>
-                        <option value="8" {{ $month == '8' ? 'selected' : '' }}>September</option>
-                        <option value="9" {{ $month == '9' ? 'selected' : '' }}>Oktober</option>
-                        <option value="10" {{ $month == '10' ? 'selected' : '' }}>November</option>
-                        <option value="11" {{ $month == '11' ? 'selected' : '' }}>Desember</option>
-                    </select>
+                    
+                    <!-- ULP Filter -->
+                    <div class="d-flex align-items-center gap-2">
+                        <label style="color: #00695c; font-weight: 600; font-size: 0.875rem;">ULP:</label>
+                        <select id="ulpSelector" class="form-select" style="width: 180px; padding: 0.6rem 0.9rem; font-size: 0.875rem; border: 2px solid #b2dfdb; border-radius: 8px; font-weight: 600; color: #00695c; background: #e0f2f1;">
+                            <option value="">Semua ULP</option>
+                            @foreach($ulpList as $ulpItem)
+                            <option value="{{ $ulpItem->ulp_code }}" {{ $ulp == $ulpItem->ulp_code ? 'selected' : '' }}>
+                                {{ $ulpItem->ulp_name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <!-- Month Filter -->
+                    <div class="d-flex align-items-center gap-2">
+                        <label style="color: #00695c; font-weight: 600; font-size: 0.875rem;">Bulan:</label>
+                        <select id="monthSelector" class="form-select" style="width: 150px; padding: 0.6rem 0.9rem; font-size: 0.875rem; border: 2px solid #b2dfdb; border-radius: 8px; font-weight: 600; color: #00695c; background: #e0f2f1;">
+                            <option value="">Semua Bulan</option>
+                            <option value="0" {{ $month == '0' ? 'selected' : '' }}>Januari</option>
+                            <option value="1" {{ $month == '1' ? 'selected' : '' }}>Februari</option>
+                            <option value="2" {{ $month == '2' ? 'selected' : '' }}>Maret</option>
+                            <option value="3" {{ $month == '3' ? 'selected' : '' }}>April</option>
+                            <option value="4" {{ $month == '4' ? 'selected' : '' }}>Mei</option>
+                            <option value="5" {{ $month == '5' ? 'selected' : '' }}>Juni</option>
+                            <option value="6" {{ $month == '6' ? 'selected' : '' }}>Juli</option>
+                            <option value="7" {{ $month == '7' ? 'selected' : '' }}>Agustus</option>
+                            <option value="8" {{ $month == '8' ? 'selected' : '' }}>September</option>
+                            <option value="9" {{ $month == '9' ? 'selected' : '' }}>Oktober</option>
+                            <option value="10" {{ $month == '10' ? 'selected' : '' }}>November</option>
+                            <option value="11" {{ $month == '11' ? 'selected' : '' }}>Desember</option>
+                        </select>
+                    </div>
+                    
                     <span style="color: #64748b; font-size: 0.813rem;">
-                        Pilih bulan untuk melihat data spesifik tarif
+                        Pilih ULP dan/atau bulan untuk filter data
                     </span>
                 </div>
             </div>
@@ -180,9 +206,14 @@
 
         <!-- PELANGGAN PER TARIF -->
         <div class="detail-table-container">
-            <h3 style="margin-bottom: 15px; color: #00897b;">
-                <i class="bi bi-people-fill"></i> PELANGGAN PER TARIF
-            </h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 style="margin-bottom: 0; color: #00897b;">
+                    <i class="bi bi-people-fill"></i> PELANGGAN PER TARIF
+                </h3>
+                <button onclick="downloadTableAsExcel('pelanggan')" class="btn btn-sm" style="background: #00897b; color: white;">
+                    <i class="bi bi-file-earmark-excel"></i> Download Excel
+                </button>
+            </div>
             <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
                 <table class="detail-table">
                     <thead>
@@ -236,9 +267,14 @@
 
         <!-- DAYA PER TARIF -->
         <div class="detail-table-container">
-            <h3 style="margin-bottom: 15px; color: #00897b;">
-                <i class="bi bi-lightning-charge-fill"></i> DAYA PER TARIF
-            </h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 style="margin-bottom: 0; color: #00897b;">
+                    <i class="bi bi-lightning-charge-fill"></i> DAYA PER TARIF
+                </h3>
+                <button onclick="downloadTableAsExcel('daya')" class="btn btn-sm" style="background: #00897b; color: white;">
+                    <i class="bi bi-file-earmark-excel"></i> Download Excel
+                </button>
+            </div>
             <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
                 <table class="detail-table">
                     <thead>
@@ -292,9 +328,14 @@
 
         <!-- KWH JUAL PER TARIF -->
         <div class="detail-table-container">
-            <h3 style="margin-bottom: 15px; color: #00897b;">
-                <i class="bi bi-speedometer2"></i> KWH JUAL PER TARIF
-            </h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 style="margin-bottom: 0; color: #00897b;">
+                    <i class="bi bi-speedometer2"></i> KWH JUAL PER TARIF
+                </h3>
+                <button onclick="downloadTableAsExcel('kwh')" class="btn btn-sm" style="background: #00897b; color: white;">
+                    <i class="bi bi-file-earmark-excel"></i> Download Excel
+                </button>
+            </div>
             <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
                 <table class="detail-table">
                     <thead>
@@ -348,9 +389,14 @@
 
         <!-- RP PENDAPATAN PER TARIF -->
         <div class="detail-table-container">
-            <h3 style="margin-bottom: 15px; color: #00897b;">
-                <i class="bi bi-cash-stack"></i> RP PENDAPATAN PER TARIF
-            </h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 style="margin-bottom: 0; color: #00897b;">
+                    <i class="bi bi-cash-stack"></i> RP PENDAPATAN PER TARIF
+                </h3>
+                <button onclick="downloadTableAsExcel('rp')" class="btn btn-sm" style="background: #00897b; color: white;">
+                    <i class="bi bi-file-earmark-excel"></i> Download Excel
+                </button>
+            </div>
             <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
                 <table class="detail-table">
                     <thead>
@@ -451,18 +497,67 @@
         
         function changeYear(year) {
             const month = document.getElementById('monthSelector').value;
+            const ulp = document.getElementById('ulpSelector').value;
             let url = '?year=' + year;
             if (month) url += '&month=' + month;
+            if (ulp) url += '&ulp=' + ulp;
             window.location.href = url;
         }
         
         document.getElementById('monthSelector').addEventListener('change', function() {
             const month = this.value;
             const year = document.getElementById('yearSelector').value;
+            const ulp = document.getElementById('ulpSelector').value;
             let url = '?year=' + year;
             if (month) url += '&month=' + month;
+            if (ulp) url += '&ulp=' + ulp;
             window.location.href = url;
         });
+        
+        document.getElementById('ulpSelector').addEventListener('change', function() {
+            const ulp = this.value;
+            const year = document.getElementById('yearSelector').value;
+            const month = document.getElementById('monthSelector').value;
+            let url = '?year=' + year;
+            if (month) url += '&month=' + month;
+            if (ulp) url += '&ulp=' + ulp;
+            window.location.href = url;
+        });
+
+        // Function to download table as Excel
+        function downloadTableAsExcel(tableName) {
+            const tables = {
+                'pelanggan': 0,
+                'daya': 1,
+                'kwh': 2,
+                'rp': 3
+            };
+            
+            const tableIndex = tables[tableName];
+            const table = document.querySelectorAll('.detail-table')[tableIndex];
+            
+            if (!table) {
+                alert('Tabel tidak ditemukan');
+                return;
+            }
+            
+            let html = '<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background-color:#00897b;color:white;font-weight:bold}</style></head><body>';
+            html += '<h2>Data Pengusahaan 309 - ' + tableName.toUpperCase() + ' PER TARIF</h2>';
+            html += '<p>Tanggal: ' + new Date().toLocaleDateString('id-ID') + '</p>';
+            html += table.outerHTML;
+            html += '</body></html>';
+            
+            const blob = new Blob(['\ufeff' + html], {
+                type: 'application/vnd.ms-excel'
+            });
+            
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `309-per-tarif-${tableName}-${new Date().toISOString().split('T')[0]}.xls`;
+            link.click();
+            window.URL.revokeObjectURL(url);
+        }
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

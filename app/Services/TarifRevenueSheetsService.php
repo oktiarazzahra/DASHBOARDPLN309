@@ -62,6 +62,7 @@ class TarifRevenueSheetsService
         }
         
         $result = [];
+        $rowOrder = 0;
         
         foreach ($values as $index => $row) {
             if ($index < 4) {
@@ -82,6 +83,8 @@ class TarifRevenueSheetsService
                 continue;
             }
             
+            $rowOrder++;
+            
             $category = $this->extractCategory($tarifName);
             $tarifCode = $this->generateTarifCode($tarifName);
             
@@ -96,6 +99,7 @@ class TarifRevenueSheetsService
                     'tarif_code' => $tarifCode,
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
+                    'row_order' => $rowOrder,
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,
@@ -120,6 +124,7 @@ class TarifRevenueSheetsService
         }
         
         $result = [];
+        $rowOrder = 0;
         
         foreach ($values as $index => $row) {
             if ($index < 4) {
@@ -140,6 +145,8 @@ class TarifRevenueSheetsService
                 continue;
             }
             
+            $rowOrder++;
+            
             $category = $this->extractCategory($tarifName);
             $tarifCode = $this->generateTarifCode($tarifName);
             
@@ -154,6 +161,7 @@ class TarifRevenueSheetsService
                     'tarif_code' => $tarifCode,
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
+                    'row_order' => $rowOrder,
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,

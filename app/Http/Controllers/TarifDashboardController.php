@@ -11,11 +11,20 @@ class TarifDashboardController extends Controller
     {
         $year = $request->input('year', 2025);
         $month = $request->input('month', null);
+        $ulp = $request->input('ulp', null);
         
         // Redirect jika tahun > 2025
         if ($year > 2025) {
             return redirect('/tarif?year=2025');
         }
+        
+        // Get list of ULP for dropdown
+        $ulpList = DB::table('tarif_customer_data')
+            ->select('ulp_code', 'ulp_name')
+            ->whereNotNull('ulp_code')
+            ->distinct()
+            ->orderBy('ulp_code')
+            ->get();
         
         // DATA DETAIL PER TARIF
         $detailData = DB::table('tarif_customer_data')
@@ -23,15 +32,18 @@ class TarifDashboardController extends Controller
                 'tarif_code',
                 'tarif_name',
                 'tarif_category',
+                DB::raw('MIN(row_order) as row_order'),
                 DB::raw('SUM(total_customers) as customers')
             )
             ->where('year', $year)
             ->when($month !== null && $month !== '', function($q) use ($month) {
                 return $q->where('month', $month);
             })
+            ->when($ulp !== null && $ulp !== '', function($q) use ($ulp) {
+                return $q->where('ulp_code', $ulp);
+            })
             ->groupBy('tarif_code', 'tarif_name', 'tarif_category')
-            ->orderBy('tarif_category')
-            ->orderBy('tarif_name')
+            ->orderBy('row_order')
             ->get();
         
         // Tambahkan data power, kwh, rp untuk setiap tarif
@@ -42,6 +54,9 @@ class TarifDashboardController extends Controller
                 ->where('tarif_code', $tarif->tarif_code)
                 ->when($month !== null && $month !== '', function($q) use ($month) {
                     return $q->where('month', $month);
+                })
+                ->when($ulp !== null && $ulp !== '', function($q) use ($ulp) {
+                    return $q->where('ulp_code', $ulp);
                 })
                 ->sum('total_power');
             $tarif->power = $power;
@@ -54,6 +69,9 @@ class TarifDashboardController extends Controller
                 ->when($month !== null && $month !== '', function($q) use ($month) {
                     return $q->where('month', $month);
                 })
+                ->when($ulp !== null && $ulp !== '', function($q) use ($ulp) {
+                    return $q->where('ulp_code', $ulp);
+                })
                 ->sum('value');
             $tarif->kwh = $kwh;
             
@@ -65,6 +83,9 @@ class TarifDashboardController extends Controller
                 ->when($month !== null && $month !== '', function($q) use ($month) {
                     return $q->where('month', $month);
                 })
+                ->when($ulp !== null && $ulp !== '', function($q) use ($ulp) {
+                    return $q->where('ulp_code', $ulp);
+                })
                 ->sum('value');
             $tarif->rp = $rp;
             
@@ -75,6 +96,8 @@ class TarifDashboardController extends Controller
         return view('tarif.index', compact(
             'year',
             'month',
+            'ulp',
+            'ulpList',
             'detailData'
         ));
     }

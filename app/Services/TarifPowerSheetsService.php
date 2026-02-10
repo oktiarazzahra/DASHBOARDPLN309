@@ -35,6 +35,8 @@ class TarifPowerSheetsService
         
         $result = [];
         
+        $rowOrder = 0; // Counter untuk urutan row
+        
         foreach ($values as $index => $row) {
             if ($index < 4) {
                 continue;
@@ -54,6 +56,8 @@ class TarifPowerSheetsService
                 continue;
             }
             
+            $rowOrder++;
+            
             $category = $this->extractCategory($tarifName);
             $tarifCode = $this->generateTarifCode($tarifName);
             
@@ -68,6 +72,7 @@ class TarifPowerSheetsService
                     'tarif_code' => $tarifCode,
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
+                    'row_order' => $rowOrder,
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,

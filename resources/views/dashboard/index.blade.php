@@ -196,7 +196,7 @@
     <nav class="navbar">
         <div class="container-fluid px-4">
             <span class="navbar-brand">
-                <i class="bi bi-lightning-charge-fill"></i> PLN UP3 Balikpapan
+                <i class="bi bi-lightning-charge-fill"></i> Data Pengusahaan 309
             </span>
             <div class="d-flex align-items-center gap-3">
                 <!-- Tab Navigation -->
@@ -212,12 +212,6 @@
                         </a>
                     </li>
                 </ul>
-                
-                <!-- Sync Status Indicator -->
-                <div id="syncIndicator" class="sync-indicator">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <span>Data terkini</span>
-                </div>
                 
                 <span style="color: rgba(255,255,255,0.9); font-size: 0.875rem; font-weight: 500;">
                     <i class="bi bi-calendar3"></i> Tahun:
@@ -268,11 +262,21 @@
             <!-- Distribusi Pelanggan -->
             <div class="col-lg-6">
                 <div class="chart-card" style="padding: 1.25rem; height: 450px;">
-                    <div class="mb-2">
-                        <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Pelanggan</div>
-                        <div style="font-size: 0.75rem; color: #64748b;">Proporsi per ULP</div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Pelanggan</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Proporsi per ULP</div>
+                        </div>
+                        <button onclick="downloadChart('customerChart', 'pelanggan')" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i>
+                        </button>
                     </div>
-                    <div style="position: relative; height: 320px;">
+                    <!-- Total Pelanggan -->
+                    <div class="text-center mb-3" style="padding: 1rem; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); border-radius: 10px;">
+                        <div style="font-size: 0.75rem; color: #00695c; font-weight: 600; margin-bottom: 0.25rem;">TOTAL PELANGGAN</div>
+                        <div id="totalCustomers" style="font-size: 1.75rem; font-weight: 700; color: #00897b;">-</div>
+                    </div>
+                    <div style="position: relative; height: 240px;">
                         <canvas id="customerChart"></canvas>
                     </div>
                     <div id="customerLegend" class="mt-2" style="font-size: 0.75rem; color: #64748b;"></div>
@@ -282,9 +286,14 @@
             <!-- Daya Tersambung -->
             <div class="col-lg-6">
                 <div class="chart-card" style="padding: 1.25rem; height: 450px;">
-                    <div class="mb-2">
-                        <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Daya Tersambung</div>
-                        <div style="font-size: 0.75rem; color: #64748b;">Proporsi daya per ULP (kVA)</div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Daya Tersambung</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Total daya terpasang per ULP (kVA)</div>
+                        </div>
+                        <button onclick="downloadChart('powerChart', 'daya-tersambung')" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i>
+                        </button>
                     </div>
                     <div style="position: relative; height: 320px;">
                         <canvas id="powerChart"></canvas>
@@ -298,9 +307,14 @@
         <div class="row g-3 mb-3">
             <div class="col-lg-6">
                 <div class="chart-card" style="padding: 1.25rem; height: 450px;">
-                    <div class="mb-2">
-                        <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi kWh Jual</div>
-                        <div style="font-size: 0.75rem; color: #64748b;">Proporsi penjualan energi per ULP</div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi kWh Jual</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Proporsi penjualan energi per ULP (Juta kWh)</div>
+                        </div>
+                        <button onclick="downloadChart('kwhChart', 'kwh-jual')" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i>
+                        </button>
                     </div>
                     <div style="position: relative; height: 320px;">
                         <canvas id="kwhChart"></canvas>
@@ -310,9 +324,14 @@
             </div>
             <div class="col-lg-6">
                 <div class="chart-card" style="padding: 1.25rem; height: 450px;">
-                    <div class="mb-2">
-                        <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Rp Pendapatan</div>
-                        <div style="font-size: 0.75rem; color: #64748b;">Proporsi pendapatan per ULP (Milyar)</div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Rp Pendapatan</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Proporsi pendapatan per ULP (Milyar)</div>
+                        </div>
+                        <button onclick="downloadChart('rpChart', 'rp-pendapatan')" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i>
+                        </button>
                     </div>
                     <div style="position: relative; height: 320px;">
                         <canvas id="rpChart"></canvas>
@@ -326,8 +345,11 @@
         <div class="row">
             <div class="col-12">
                 <div class="table-card">
-                    <div class="table-header">
-                        <h6>Ringkasan Data per ULP</h6>
+                    <div class="table-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Ringkasan Data per ULP</h6>
+                        <button onclick="downloadTableAsExcel()" class="btn btn-sm" style="background: #00897b; color: white;">
+                            <i class="bi bi-file-earmark-excel"></i> Download Excel
+                        </button>
                     </div>
                     <div class="table-responsive">
                         <table class="table">
@@ -507,6 +529,10 @@
             }, ChartDataLabels]
         });
 
+        // Initialize total pelanggan display (December data)
+        const initialTotalCustomers = ulpTotals.reduce((sum, ulp) => sum + ulp.monthlyData[11], 0);
+        document.getElementById('totalCustomers').textContent = initialTotalCustomers.toLocaleString('id-ID');
+
         // Month selector functionality - affects ALL charts and summary
         document.getElementById('monthSelector').addEventListener('change', function() {
             const monthIndex = parseInt(this.value);
@@ -514,6 +540,10 @@
             // Update Customer Chart (Pie)
             customerChart.data.datasets[0].data = ulpTotals.map(ulp => ulp.monthlyData[monthIndex]);
             customerChart.update();
+            
+            // Update total pelanggan display
+            const totalCustomers = ulpTotals.reduce((sum, ulp) => sum + ulp.monthlyData[monthIndex], 0);
+            document.getElementById('totalCustomers').textContent = totalCustomers.toLocaleString('id-ID');
             
             // Update Power Chart (Pie) - show proportions for selected month
             powerChart.data.datasets[0].data = powerByUlp.map(ulp => ulp.data[monthIndex] / 1000);
@@ -976,6 +1006,130 @@
         }, 2000);
 
         console.log('⚡ SUPER FAST Real-time sync ACTIVE - checking every 5 seconds!');
+
+        // Function to download chart as image
+        function downloadChart(chartId, filename) {
+            // Get chart instance
+            const chartInstance = Chart.getChart(chartId);
+            if (!chartInstance) return;
+            
+            const canvas = document.getElementById(chartId);
+            const isPieChart = chartInstance.config.type === 'doughnut';
+            
+            // Chart titles mapping
+            const chartTitles = {
+                'customerChart': 'DISTRIBUSI PELANGGAN PER ULP',
+                'powerChart': 'DAYA TERSAMBUNG PER ULP (kVA)',
+                'kwhChart': 'PENJUALAN ENERGI PER ULP (kWh)',
+                'rpChart': 'PENDAPATAN PER ULP (Rp)'
+            };
+            
+            // Create a large temporary canvas for high quality export
+            const exportWidth = isPieChart ? 1400 : 1200;
+            const exportHeight = isPieChart ? 1400 : 900;
+            const padding = isPieChart ? 120 : 100;
+            const titleHeight = 100;
+            
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = exportWidth;
+            tempCanvas.height = exportHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Fill white background
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Draw title
+            tempCtx.fillStyle = '#00897b';
+            tempCtx.font = 'bold 28px Arial';
+            tempCtx.textAlign = 'center';
+            tempCtx.fillText(chartTitles[chartId] || 'CHART', tempCanvas.width / 2, 50);
+            
+            // Draw subtitle with current month/year
+            const monthSelector = document.getElementById('monthSelector');
+            const monthText = monthSelector ? monthSelector.options[monthSelector.selectedIndex].text : '';
+            const yearSelector = document.getElementById('yearSelector');
+            const yearText = yearSelector ? ' ' + yearSelector.value : '';
+            tempCtx.fillStyle = '#666666';
+            tempCtx.font = '18px Arial';
+            tempCtx.fillText(monthText + yearText, tempCanvas.width / 2, 80);
+            
+            // Calculate chart area dimensions
+            const chartWidth = tempCanvas.width - (padding * 2);
+            const chartHeight = tempCanvas.height - (padding * 2) - titleHeight;
+            
+            // Create a temporary hidden canvas for rendering chart at larger size
+            const chartCanvas = document.createElement('canvas');
+            chartCanvas.width = chartWidth;
+            chartCanvas.height = chartHeight;
+            chartCanvas.style.display = 'none';
+            document.body.appendChild(chartCanvas);
+            
+            // Clone chart configuration with larger font sizes for export
+            const exportConfig = JSON.parse(JSON.stringify(chartInstance.config));
+            exportConfig.options.animation = { duration: 0 };
+            exportConfig.options.responsive = false;
+            exportConfig.options.maintainAspectRatio = false;
+            
+            // Update font sizes for export
+            if (exportConfig.options.plugins.datalabels) {
+                exportConfig.options.plugins.datalabels.font = {
+                    size: isPieChart ? 14 : 13,
+                    weight: 'bold'
+                };
+                if (isPieChart) {
+                    exportConfig.options.plugins.datalabels.offset = 20;
+                    exportConfig.options.plugins.datalabels.padding = {
+                        top: 10,
+                        bottom: 10,
+                        left: 14,
+                        right: 14
+                    };
+                }
+            }
+            
+            // Create temporary chart
+            const tempChart = new Chart(chartCanvas, exportConfig);
+            
+            // Wait for chart to render
+            setTimeout(() => {
+                // Draw the temporary chart onto main canvas
+                tempCtx.drawImage(chartCanvas, padding, padding + titleHeight, chartWidth, chartHeight);
+                
+                // Download
+                const url = tempCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `${filename}-${new Date().toISOString().split('T')[0]}.png`;
+                link.href = url;
+                link.click();
+                
+                // Cleanup
+                tempChart.destroy();
+                document.body.removeChild(chartCanvas);
+            }, 100);
+        }
+
+        // Function to download table as Excel
+        function downloadTableAsExcel() {
+            // Get table data
+            const table = document.querySelector('.table');
+            let html = '<html><head><meta charset="utf-8"><style>table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background-color:#00897b;color:white;font-weight:bold}</style></head><body>';
+            html += '<h2>Data Pengusahaan 309 - Ringkasan Data per ULP</h2>';
+            html += '<p>Tanggal: ' + new Date().toLocaleDateString('id-ID') + '</p>';
+            html += table.outerHTML;
+            html += '</body></html>';
+            
+            const blob = new Blob(['\ufeff' + html], {
+                type: 'application/vnd.ms-excel'
+            });
+            
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `data-pengusahaan-309-${new Date().toISOString().split('T')[0]}.xls`;
+            link.click();
+            window.URL.revokeObjectURL(url);
+        }
     </script>
 </body>
 </html>

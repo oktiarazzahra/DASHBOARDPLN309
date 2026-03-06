@@ -1,6 +1,7 @@
 *.log
 .DS_Store
 .env
+render_secret_base64.txt
 .env.backup
 .env.production
 .phpactor.json

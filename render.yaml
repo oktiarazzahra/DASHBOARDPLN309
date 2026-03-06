@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: dashboard-pln-309
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: singapore
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/storage/database.sqlite
+      - key: GOOGLE_SPREADSHEET_ID
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_BASE64
+        sync: false
+      - key: AUTO_SYNC_ON_START
+        value: "true"

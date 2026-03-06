@@ -17,9 +17,10 @@ if [ ! -f "/var/www/html/.env" ]; then
     cp /var/www/html/.env.example /var/www/html/.env
     
     # Set database path
-    sed -i 's|DB_DATABASE=.*|DB_DATABASE=/data/database.sqlite|g' /var/www/html/.env
+    sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/html/storage/database.sqlite|g' /var/www/html/.env
     sed -i 's|APP_ENV=.*|APP_ENV=production|g' /var/www/html/.env
     sed -i 's|APP_DEBUG=.*|APP_DEBUG=false|g' /var/www/html/.env
+    sed -i 's|GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION=.*|GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION=/var/www/html/storage/app/google/service-account.json|g' /var/www/html/.env
 fi
 
 # Generate app key if not exists

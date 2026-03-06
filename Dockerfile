@@ -26,7 +26,7 @@ COPY . .
 # Create dummy service account so composer install doesn't fail at build time
 # (real service account will be injected at runtime via GOOGLE_SERVICE_ACCOUNT_BASE64)
 RUN mkdir -p /var/www/html/storage/app/google \
-    && echo '{"type":"service_account","project_id":"placeholder"}' > /var/www/html/storage/app/google/service-account.json
+    && echo '{"type":"service_account","project_id":"placeholder","private_key_id":"placeholder","private_key":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA2a2rwplBQLF29amygykEMmYz0+Kcj3bKBp29bNM4ASMBIcWB\nplaceholder\n-----END RSA PRIVATE KEY-----\n","client_email":"placeholder@placeholder.iam.gserviceaccount.com","client_id":"000000000000000000000","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/placeholder","universe_domain":"googleapis.com"}' > /var/www/html/storage/app/google/service-account.json
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction

@@ -98,9 +98,14 @@ class PowerSheetsService
                 $headerRowIndex = $section['start_index'];
                 $dataType = 'bulanan';
                 
-                // Tentukan batas akhir section (sampai KOMULATIF atau section berikutnya)
+                // Tentukan batas akhir section (sampai KOMULATIF atau section BULANAN berikutnya)
                 $endIndex = count($data);
-                for ($j = $headerRowIndex + 1; $j < count($data); $j++) {
+                // Stop at next BULANAN section to prevent overwriting current section's data with 0
+                if (isset($bulaanSections[$sectionIndex + 1])) {
+                    $endIndex = $bulaanSections[$sectionIndex + 1]['start_index'];
+                }
+                // Also stop at KOMULATIF if it comes before next BULANAN
+                for ($j = $headerRowIndex + 1; $j < $endIndex; $j++) {
                     if (isset($data[$j][0]) && strtoupper(trim($data[$j][0])) === 'KOMULATIF') {
                         $endIndex = $j;
                         break;
@@ -148,21 +153,20 @@ class PowerSheetsService
                         $powerVa = isset($row[$columnIndex]) ? 
                             (int)str_replace([',', '.'], '', trim($row[$columnIndex])) : 0;
 
-                        if ($powerVa > 0) {
-                            PowerData::updateOrCreate(
-                                [
-                                    'ulp_code' => $ulpCode,
-                                    'month' => $months[$monthIndex],
-                                    'year' => $year,
-                                    'data_type' => $dataType,
-                                ],
-                                [
-                                    'ulp_name' => $ulpName,
-                                    'power_va' => $powerVa,
-                                ]
-                            );
-                            $syncedCount++;
-                        }
+                        // Insert even if 0 (for 2026 empty columns)
+                        PowerData::updateOrCreate(
+                            [
+                                'ulp_code' => $ulpCode,
+                                'month' => $months[$monthIndex],
+                                'year' => $year,
+                                'data_type' => $dataType,
+                            ],
+                            [
+                                'ulp_name' => $ulpName,
+                                'power_va' => $powerVa,
+                            ]
+                        );
+                        $syncedCount++;
                     }
                 }
             }

@@ -9,14 +9,11 @@ class TarifDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $year = $request->input('year', 2025);
+        $year = (int)$request->input('year', 2025);
         $month = $request->input('month', null);
         $ulp = $request->input('ulp', null);
         
-        // Redirect jika tahun > 2025
-        if ($year > 2025) {
-            return redirect('/tarif?year=2025');
-        }
+        $availableYears = [2025, 2026];
         
         // Get list of ULP for dropdown
         $ulpList = DB::table('tarif_customer_data')
@@ -95,6 +92,7 @@ class TarifDashboardController extends Controller
         
         return view('tarif.index', compact(
             'year',
+            'availableYears',
             'month',
             'ulp',
             'ulpList',

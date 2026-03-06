@@ -25,7 +25,9 @@ class TarifPowerSheetsService
     {
         $service = new Sheets($this->client);
         
-        $range = 'DAYA/TARIF!A1:M80';
+        // DAYA/TARIF has only BULANAN (no KOMULATIF)
+        // Read up to row 73 to avoid any trailing headers
+        $range = 'DAYA/TARIF!A1:AA73';
         $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
         $values = $response->getValues();
         
@@ -33,26 +35,34 @@ class TarifPowerSheetsService
             return [];
         }
         
-        $result = [];
+        $dataColOffset = ($year == 2026) ? 15 : 1;
+        $nameColOffset = ($year == 2026) ? 14 : 0;
         
-        $rowOrder = 0; // Counter untuk urutan row
+        $result = [];
+        $rowOrder = 0;
         
         foreach ($values as $index => $row) {
             if ($index < 4) {
                 continue;
             }
             
-            if (empty($row[0])) {
+            if (empty($row[$nameColOffset])) {
                 continue;
             }
             
-            $tarifName = trim($row[0]);
+            $tarifName = trim($row[$nameColOffset]);
             
-            if (in_array($tarifName, ['II', 'III', ''])) {
+            // Skip non-tarif rows (headers, section labels, subtotals)
+            if (in_array($tarifName, ['II', 'III', 'BULANAN', 'KOMULATIF', ''])) {
                 continue;
             }
             
             if (strpos($tarifName, 'JUMLAH') !== false) {
+                continue;
+            }
+            
+            // Skip anything that looks like a title row
+            if (strpos($tarifName, 'KALTIMRA') !== false) {
                 continue;
             }
             
@@ -64,7 +74,7 @@ class TarifPowerSheetsService
             $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
             
             foreach ($months as $monthIndex => $monthName) {
-                $columnIndex = $monthIndex + 1;
+                $columnIndex = $dataColOffset + $monthIndex;
                 
                 $value = isset($row[$columnIndex]) ? $this->cleanNumber($row[$columnIndex]) : 0;
                 
@@ -73,6 +83,7 @@ class TarifPowerSheetsService
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
                     'row_order' => $rowOrder,
+                    'ulp_code' => '',
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,
@@ -117,15 +128,17 @@ class TarifPowerSheetsService
         return (int)$cleaned;
     }
     
-    public function syncToDatabase()
+    public function syncToDatabase($year = 2025)
     {
-        $data = $this->getPowerData(2025);
+        $data = $this->getPowerData($year);
         
         if (!empty($data)) {
-            DB::table('tarif_power_data')->where('year', 2025)->delete();
-            
-            foreach (array_chunk($data, 100) as $chunk) {
-                DB::table('tarif_power_data')->insert($chunk);
+            foreach (array_chunk($data, 200) as $chunk) {
+                DB::table('tarif_power_data')->upsert(
+                    $chunk,
+                    ['tarif_code', 'ulp_code', 'year', 'month'],
+                    ['tarif_name', 'tarif_category', 'row_order', 'total_power']
+                );
             }
         }
         

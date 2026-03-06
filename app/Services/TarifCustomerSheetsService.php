@@ -25,8 +25,10 @@ class TarifCustomerSheetsService
     {
         $service = new Sheets($this->client);
         
-        // Range dari A1 sampai M80 untuk mengcover semua data
-        $range = 'PELANGGAN/TARIF!A1:M80';
+        // PELANGGAN/TARIF has only BULANAN (no KOMULATIF)
+        // 2025 data: rows 4-71, 2026 starts at row 76
+        // Read up to row 73 to avoid hitting 2026 BULANAN header at row 76
+        $range = 'PELANGGAN/TARIF!A1:AA73';
         $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
         $values = $response->getValues();
         
@@ -34,53 +36,46 @@ class TarifCustomerSheetsService
             return [];
         }
         
+        $dataColOffset = ($year == 2026) ? 15 : 1;
+        $nameColOffset = ($year == 2026) ? 14 : 0;
+        
         $result = [];
-        
-        // Row 4 adalah header bulan (BULANAN | JAN | FEB | ... | DEC)
-        // Row 5 onwards adalah data tarif
-        
-        // Skip rows yang hanya berisi "II" atau "III" (continuation)
-        // Skip rows yang berisi "JUMLAH" (subtotal)
-        
-        $rowOrder = 0; // Counter untuk urutan row
+        $rowOrder = 0;
         
         foreach ($values as $index => $row) {
-            // Skip header rows (0-4)
             if ($index < 4) {
                 continue;
             }
             
-            // Skip empty rows
-            if (empty($row[0])) {
+            if (empty($row[$nameColOffset])) {
                 continue;
             }
             
-            $tarifName = trim($row[0]);
+            $tarifName = trim($row[$nameColOffset]);
             
-            // Skip continuation rows
-            if (in_array($tarifName, ['II', 'III', ''])) {
+            // Skip non-tarif rows (headers, section labels, subtotals)
+            if (in_array($tarifName, ['II', 'III', 'BULANAN', 'KOMULATIF', ''])) {
                 continue;
             }
             
-            // Skip subtotal rows
             if (strpos($tarifName, 'JUMLAH') !== false) {
                 continue;
             }
             
-            // Increment row order
+            // Skip anything that looks like a title row
+            if (strpos($tarifName, 'KALTIMRA') !== false) {
+                continue;
+            }
+            
             $rowOrder++;
             
-            // Ekstrak kategori dari nama tarif (S1, R1, B1, I1, P1, T, C, L)
             $category = $this->extractCategory($tarifName);
-            
-            // Generate tarif code (simplified version of name)
             $tarifCode = $this->generateTarifCode($tarifName);
             
-            // Data bulan dimulai dari column index 1 (JAN) sampai 12 (DEC)
             $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
             
             foreach ($months as $monthIndex => $monthName) {
-                $columnIndex = $monthIndex + 1; // +1 karena column 0 adalah nama tarif
+                $columnIndex = $dataColOffset + $monthIndex;
                 
                 $value = isset($row[$columnIndex]) ? $this->cleanNumber($row[$columnIndex]) : 0;
                 
@@ -89,6 +84,7 @@ class TarifCustomerSheetsService
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
                     'row_order' => $rowOrder,
+                    'ulp_code' => '',
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,
@@ -138,15 +134,17 @@ class TarifCustomerSheetsService
         return (int)$cleaned;
     }
     
-    public function syncToDatabase()
+    public function syncToDatabase($year = 2025)
     {
-        $data = $this->getCustomerData(2025);
+        $data = $this->getCustomerData($year);
         
         if (!empty($data)) {
-            DB::table('tarif_customer_data')->where('year', 2025)->delete();
-            
-            foreach (array_chunk($data, 100) as $chunk) {
-                DB::table('tarif_customer_data')->insert($chunk);
+            foreach (array_chunk($data, 200) as $chunk) {
+                DB::table('tarif_customer_data')->upsert(
+                    $chunk,
+                    ['tarif_code', 'ulp_code', 'year', 'month'],
+                    ['tarif_name', 'tarif_category', 'row_order', 'total_customers']
+                );
             }
         }
         

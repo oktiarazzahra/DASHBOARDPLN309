@@ -143,6 +143,10 @@
             from { transform: translateX(400px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
         .sync-indicator {
             display: inline-flex;
             align-items: center;
@@ -221,6 +225,9 @@
                     <option value="{{ $availableYear }}" {{ $availableYear == $year ? 'selected' : '' }}>{{ $availableYear }}</option>
                     @endforeach
                 </select>
+                <button id="syncNowBtn" onclick="syncNow()" title="Sync data dari spreadsheet sekarang" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: white; border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    <i class="bi bi-arrow-clockwise" id="syncNowIcon"></i> Sync
+                </button>
             </div>
         </div>
     </nav>
@@ -892,7 +899,61 @@
             `;
         }
 
-        // Function to change year - reload page with new year parameter
+        // Function to change year - auto sync dari spreadsheet lalu reload page
+        async function syncNow() {
+            const year = document.getElementById('yearSelector').value;
+            const btn = document.getElementById('syncNowBtn');
+            const icon = document.getElementById('syncNowIcon');
+            
+            btn.disabled = true;
+            icon.style.animation = 'spin 1s linear infinite';
+            icon.style.display = 'inline-block';
+            
+            const loadingToast = document.createElement('div');
+            loadingToast.className = 'custom-toast';
+            loadingToast.id = 'syncNowToast';
+            loadingToast.innerHTML = `
+                <div class="d-flex align-items-center gap-2">
+                    <div class="spinner-border spinner-border-sm" style="color: #17a2b8;" role="status"></div>
+                    <div>
+                        <div style="font-weight: 600; color: #0f172a; font-size: 0.875rem;">Menyinkronkan data ${year}...</div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">Mengambil data terbaru dari spreadsheet</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('toastContainer').appendChild(loadingToast);
+            
+            try {
+                await Promise.all([
+                    fetch('/api/trigger-sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ year: year })
+                    }),
+                    fetch('/api/tarif/trigger-sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ year: year })
+                    })
+                ]);
+                
+                loadingToast.innerHTML = `
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill" style="color: #10b981; font-size: 1.25rem;"></i>
+                        <div>
+                            <div style="font-weight: 600; color: #0f172a; font-size: 0.875rem;">✓ Sync berhasil! Memuat ulang...</div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => window.location.reload(), 1000);
+            } catch (e) {
+                loadingToast.innerHTML = `<div style="color: #ef4444; font-weight: 600;">Sync gagal, coba lagi</div>`;
+                btn.disabled = false;
+                icon.style.animation = '';
+                setTimeout(() => loadingToast.remove(), 2000);
+            }
+        }
+
         function changeYear(year) {
             window.location.href = `/?year=${year}`;
         }

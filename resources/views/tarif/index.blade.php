@@ -116,11 +116,16 @@
         .category-t { background-color: rgba(102, 187, 106, 0.05); }
         .category-c { background-color: rgba(66, 165, 245, 0.05); }
         .category-l { background-color: rgba(255, 202, 40, 0.05); }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     @php
-        $availableYears = [2025];
+        // $availableYears sudah di-pass dari controller
+        if (!isset($availableYears)) $availableYears = [2025, 2026];
     @endphp
 
     <nav class="navbar">
@@ -151,6 +156,9 @@
                     <option value="{{ $availableYear }}" {{ $availableYear == $year ? 'selected' : '' }}>{{ $availableYear }}</option>
                     @endforeach
                 </select>
+                <button id="syncNowBtn" onclick="syncNow()" title="Sync data dari spreadsheet sekarang" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: white; border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    <i class="bi bi-arrow-clockwise" id="syncNowIcon"></i> Sync
+                </button>
             </div>
         </div>
     </nav>
@@ -203,6 +211,18 @@
                 </div>
             </div>
         </div>
+
+        @if($detailData->isEmpty())
+        <!-- Empty state: belum ada data untuk tahun ini -->
+        <div class="detail-table-container" style="text-align: center; padding: 60px 20px;">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #94a3b8;"></i>
+            <h4 style="color: #64748b; margin-top: 16px;">Belum ada data per tarif untuk tahun {{ $year }}</h4>
+            <p style="color: #94a3b8; margin-top: 8px;">
+                Data akan muncul otomatis setelah kolom tahun {{ $year }} diisi di Google Spreadsheet<br>
+                dan tombol <strong>Sync</strong> ditekan.
+            </p>
+        </div>
+        @else
 
         <!-- PELANGGAN PER TARIF -->
         <div class="detail-table-container">
@@ -447,6 +467,7 @@
                 </table>
             </div>
         </div>
+        @endif
     </div>
 
     <script>
@@ -495,6 +516,39 @@
             }
         });
         
+        async function syncNow() {
+            const year = document.getElementById('yearSelector').value;
+            const btn = document.getElementById('syncNowBtn');
+            const icon = document.getElementById('syncNowIcon');
+            
+            btn.disabled = true;
+            icon.style.animation = 'spin 1s linear infinite';
+            
+            // Show loading overlay
+            const overlay = document.getElementById('loadingOverlay');
+            const overlayText = document.getElementById('loadingText');
+            if (overlay) {
+                overlayText.textContent = `Menyinkronkan data ${year}...`;
+                overlay.style.display = 'flex';
+            }
+            
+            try {
+                await fetch('/api/tarif/trigger-sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ year: year })
+                });
+                
+                if (overlayText) overlayText.textContent = '✓ Sync berhasil! Memuat ulang...';
+                setTimeout(() => window.location.reload(), 1000);
+            } catch (e) {
+                if (overlay) overlay.style.display = 'none';
+                btn.disabled = false;
+                icon.style.animation = '';
+                alert('Sync gagal, coba lagi');
+            }
+        }
+
         function changeYear(year) {
             const month = document.getElementById('monthSelector').value;
             const ulp = document.getElementById('ulpSelector').value;

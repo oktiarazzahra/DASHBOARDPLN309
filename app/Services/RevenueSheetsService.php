@@ -17,7 +17,7 @@ class RevenueSheetsService
     public function __construct()
     {
         $this->spreadsheetId = config('google.sheets.spreadsheet_id');
-        $this->sheetName = 'RUPIAH/KWH'; // Sheet 4
+        $this->sheetName = 'RUPIAH KWH PER ULP'; // Sheet 4
         
         // Initialize Google Client with Service Account
         $this->client = new Client();
@@ -164,23 +164,22 @@ class RevenueSheetsService
                         // Rp/kWh uses comma as decimal separator (e.g., "1,076" = 1.076)
                         $rpPerKwh = (float)str_replace(',', '.', str_replace('.', '', $rpPerKwhRaw));
 
-                        if ($kwhJual > 0 || $rpPendapatan > 0) {
-                            RevenueData::updateOrCreate(
-                                [
-                                    'ulp_code' => $ulpCode,
-                                    'month' => $months[$monthIndex],
-                                    'year' => $year,
-                                    'data_type' => $dataType,
-                                ],
-                                [
-                                    'ulp_name' => $ulpName,
-                                    'kwh_jual' => $kwhJual,
-                                    'rp_pendapatan' => $rpPendapatan,
-                                    'rp_per_kwh' => $rpPerKwh,
-                                ]
-                            );
-                            $syncedCount++;
-                        }
+                        // Insert even if 0 (for 2026 empty columns)
+                        RevenueData::updateOrCreate(
+                            [
+                                'ulp_code' => $ulpCode,
+                                'month' => $months[$monthIndex],
+                                'year' => $year,
+                                'data_type' => $dataType,
+                            ],
+                            [
+                                'ulp_name' => $ulpName,
+                                'kwh_jual' => $kwhJual,
+                                'rp_pendapatan' => $rpPendapatan,
+                                'rp_per_kwh' => $rpPerKwh,
+                            ]
+                        );
+                        $syncedCount++;
                     }
                 }
             }

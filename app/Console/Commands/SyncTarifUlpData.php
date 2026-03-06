@@ -18,15 +18,7 @@ class SyncTarifUlpData extends Command
         $this->info("Syncing tarif per ULP data for year {$year}...");
         $this->newLine();
         
-        // Delete existing data untuk tahun ini
-        $this->info("Deleting existing data for year {$year}...");
-        DB::table('tarif_customer_data')->where('year', $year)->whereNotNull('ulp_code')->delete();
-        DB::table('tarif_power_data')->where('year', $year)->whereNotNull('ulp_code')->delete();
-        DB::table('tarif_revenue_data')->where('year', $year)->whereNotNull('ulp_code')->delete();
-        $this->info("✓ Old data deleted");
-        $this->newLine();
-        
-        // Sync new data
+        // Sync new data (pakai upsert — tidak perlu delete dulu)
         $service = new TarifUlpSheetsService();
         $results = $service->syncToDatabase($year);
         

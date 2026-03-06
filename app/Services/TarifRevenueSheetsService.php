@@ -53,13 +53,20 @@ class TarifRevenueSheetsService
     {
         $service = new Sheets($this->client);
         
-        $range = 'KWHJUAL/TARIF!A1:M80';
+        // Read up to row 73 (BULANAN section only, rows 4-71 are tarif data)
+        // KOMULATIF section starts at row 74 — we skip it
+        $range = 'KWHJUAL/TARIF!A1:AA73';
         $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
         $values = $response->getValues();
         
         if (empty($values)) {
             return [];
         }
+        
+        // 2025: tarif name at col 0, data at col 1-12
+        // 2026: tarif name at col 14, data at col 15-26
+        $dataColOffset = ($year == 2026) ? 15 : 1;
+        $nameColOffset = ($year == 2026) ? 14 : 0;
         
         $result = [];
         $rowOrder = 0;
@@ -69,17 +76,23 @@ class TarifRevenueSheetsService
                 continue;
             }
             
-            if (empty($row[0])) {
+            if (empty($row[$nameColOffset])) {
                 continue;
             }
             
-            $tarifName = trim($row[0]);
+            $tarifName = trim($row[$nameColOffset]);
             
-            if (in_array($tarifName, ['II', 'III', ''])) {
+            // Skip non-tarif rows (headers, section labels, subtotals)
+            if (in_array($tarifName, ['II', 'III', 'BULANAN', 'KOMULATIF', ''])) {
                 continue;
             }
             
             if (strpos($tarifName, 'JUMLAH') !== false) {
+                continue;
+            }
+            
+            // Skip anything that looks like a title row
+            if (strpos($tarifName, 'KALTIMRA') !== false) {
                 continue;
             }
             
@@ -91,7 +104,7 @@ class TarifRevenueSheetsService
             $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
             
             foreach ($months as $monthIndex => $monthName) {
-                $columnIndex = $monthIndex + 1;
+                $columnIndex = $dataColOffset + $monthIndex;
                 
                 $value = isset($row[$columnIndex]) ? $this->cleanNumber($row[$columnIndex]) : 0;
                 
@@ -100,6 +113,7 @@ class TarifRevenueSheetsService
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
                     'row_order' => $rowOrder,
+                    'ulp_code' => '',
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,
@@ -115,13 +129,20 @@ class TarifRevenueSheetsService
     {
         $service = new Sheets($this->client);
         
-        $range = 'PENDAPATAN/TARIF!A1:M80';
+        // Read up to row 73 (BULANAN section only, rows 4-71 are tarif data)
+        // KOMULATIF section starts at row 74 — we skip it
+        $range = 'PENDAPATAN/TARIF!A1:AA73';
         $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
         $values = $response->getValues();
         
         if (empty($values)) {
             return [];
         }
+        
+        // 2025: tarif name at col 0, data at col 1-12
+        // 2026: tarif name at col 14, data at col 15-26
+        $dataColOffset = ($year == 2026) ? 15 : 1;
+        $nameColOffset = ($year == 2026) ? 14 : 0;
         
         $result = [];
         $rowOrder = 0;
@@ -131,17 +152,23 @@ class TarifRevenueSheetsService
                 continue;
             }
             
-            if (empty($row[0])) {
+            if (empty($row[$nameColOffset])) {
                 continue;
             }
             
-            $tarifName = trim($row[0]);
+            $tarifName = trim($row[$nameColOffset]);
             
-            if (in_array($tarifName, ['II', 'III', ''])) {
+            // Skip non-tarif rows (headers, section labels, subtotals)
+            if (in_array($tarifName, ['II', 'III', 'BULANAN', 'KOMULATIF', ''])) {
                 continue;
             }
             
             if (strpos($tarifName, 'JUMLAH') !== false) {
+                continue;
+            }
+            
+            // Skip anything that looks like a title row
+            if (strpos($tarifName, 'KALTIMRA') !== false) {
                 continue;
             }
             
@@ -153,7 +180,7 @@ class TarifRevenueSheetsService
             $months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
             
             foreach ($months as $monthIndex => $monthName) {
-                $columnIndex = $monthIndex + 1;
+                $columnIndex = $dataColOffset + $monthIndex;
                 
                 $value = isset($row[$columnIndex]) ? $this->cleanNumber($row[$columnIndex]) : 0;
                 
@@ -162,6 +189,7 @@ class TarifRevenueSheetsService
                     'tarif_name' => $tarifName,
                     'tarif_category' => $category,
                     'row_order' => $rowOrder,
+                    'ulp_code' => '',
                     'year' => $year,
                     'month' => $monthIndex,
                     'month_name' => $monthName,
@@ -206,15 +234,17 @@ class TarifRevenueSheetsService
         return (float)$cleaned;
     }
     
-    public function syncToDatabase()
+    public function syncToDatabase($year = 2025)
     {
-        $data = $this->getRevenueData(2025);
+        $data = $this->getRevenueData($year);
         
         if (!empty($data)) {
-            DB::table('tarif_revenue_data')->where('year', 2025)->delete();
-            
-            foreach (array_chunk($data, 100) as $chunk) {
-                DB::table('tarif_revenue_data')->insert($chunk);
+            foreach (array_chunk($data, 200) as $chunk) {
+                DB::table('tarif_revenue_data')->upsert(
+                    $chunk,
+                    ['tarif_code', 'ulp_code', 'year', 'month', 'data_type'],
+                    ['tarif_name', 'tarif_category', 'row_order', 'value']
+                );
             }
         }
         

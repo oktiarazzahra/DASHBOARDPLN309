@@ -25,11 +25,13 @@ class SyncTarifData extends Command
         $customerData = $customerService->getCustomerData($year);
         
         if (!empty($customerData)) {
-            DB::table('tarif_customer_data')
-                ->where('year', $year)
-                ->delete();
-            
-            DB::table('tarif_customer_data')->insert($customerData);
+            foreach (array_chunk($customerData, 200) as $chunk) {
+                DB::table('tarif_customer_data')->upsert(
+                    $chunk,
+                    ['tarif_code', 'ulp_code', 'year', 'month'],
+                    ['tarif_name', 'tarif_category', 'row_order', 'total_customers']
+                );
+            }
             $this->info("✓ Synced " . count($customerData) . " customer records");
         } else {
             $this->warn("No customer data found");
@@ -41,11 +43,13 @@ class SyncTarifData extends Command
         $powerData = $powerService->getPowerData($year);
         
         if (!empty($powerData)) {
-            DB::table('tarif_power_data')
-                ->where('year', $year)
-                ->delete();
-            
-            DB::table('tarif_power_data')->insert($powerData);
+            foreach (array_chunk($powerData, 200) as $chunk) {
+                DB::table('tarif_power_data')->upsert(
+                    $chunk,
+                    ['tarif_code', 'ulp_code', 'year', 'month'],
+                    ['tarif_name', 'tarif_category', 'row_order', 'total_power']
+                );
+            }
             $this->info("✓ Synced " . count($powerData) . " power records");
         } else {
             $this->warn("No power data found");
@@ -57,11 +61,13 @@ class SyncTarifData extends Command
         $revenueData = $revenueService->getRevenueData($year);
         
         if (!empty($revenueData)) {
-            DB::table('tarif_revenue_data')
-                ->where('year', $year)
-                ->delete();
-            
-            DB::table('tarif_revenue_data')->insert($revenueData);
+            foreach (array_chunk($revenueData, 200) as $chunk) {
+                DB::table('tarif_revenue_data')->upsert(
+                    $chunk,
+                    ['tarif_code', 'ulp_code', 'year', 'month', 'data_type'],
+                    ['tarif_name', 'tarif_category', 'row_order', 'value']
+                );
+            }
             $this->info("✓ Synced " . count($revenueData) . " revenue records");
         } else {
             $this->warn("No revenue data found");

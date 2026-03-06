@@ -62,19 +62,22 @@ class TarifSyncStatusController extends Controller
     }
     
     /**
-     * Trigger manual sync untuk tarif data
+     * Trigger manual sync untuk tarif data (termasuk tarif per ULP)
      */
     public function triggerSync(Request $request)
     {
         $year = $request->get('year', 2025);
         
         try {
-            // Run the tarif sync command
+            // Run the tarif sync command (data per tarif)
             \Artisan::call('sync:tarif', ['--year' => $year]);
+            
+            // Run the tarif per ULP sync command
+            \Artisan::call('sync:tarif-ulp', ['--year' => $year]);
             
             return response()->json([
                 'success' => true,
-                'message' => 'Tarif sync triggered successfully',
+                'message' => 'Tarif and Tarif ULP sync triggered successfully',
                 'year' => $year
             ]);
         } catch (\Exception $e) {

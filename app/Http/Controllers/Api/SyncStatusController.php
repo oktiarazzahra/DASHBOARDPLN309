@@ -54,19 +54,19 @@ class SyncStatusController extends Controller
     }
     
     /**
-     * Trigger manual sync (untuk testing atau force sync)
+     * Trigger manual sync data ULP (untuk testing atau force sync)
      */
     public function triggerSync(Request $request)
     {
         $year = $request->get('year', 2025);
         
         try {
-            // Queue the sync commands
+            // Queue the sync commands untuk data ULP
             \Artisan::call('data:auto-sync', ['--year' => $year]);
             
             return response()->json([
                 'success' => true,
-                'message' => 'Sync triggered successfully',
+                'message' => 'ULP data sync triggered successfully',
                 'year' => $year
             ]);
         } catch (\Exception $e) {

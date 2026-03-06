@@ -28,15 +28,9 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
-        // Hanya support 2025 untuk saat ini (2026 belum ada data)
-        $year = $request->get('year', 2025);
+        $year = (int)$request->get('year', 2025);
         
-        // Validasi: jika tahun > 2025, redirect ke 2025
-        if ($year > 2025) {
-            return redirect('/?year=2025')->with('warning', 'Data tahun ' . $year . ' belum tersedia. Menampilkan data tahun 2025.');
-        }
-        
-        $availableYears = [2025]; // Hanya 2025 yang tersedia
+        $availableYears = [2025, 2026];
 
         // Statistik umum
         $customerStats = $this->customerService->getStatistics($year);

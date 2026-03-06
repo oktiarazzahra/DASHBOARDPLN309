@@ -62,5 +62,19 @@ chmod -R 775 /var/www/html/bootstrap/cache
 
 echo "✅ Application ready!"
 
+# Auto-sync data from Google Sheets on startup (important for Koyeb ephemeral storage)
+if [ -n "$AUTO_SYNC_ON_START" ] && [ "$AUTO_SYNC_ON_START" = "true" ]; then
+    echo "🔄 Auto-syncing data from Google Sheets..."
+    CURRENT_YEAR=$(date +%Y)
+    PREV_YEAR=$((CURRENT_YEAR - 1))
+    php artisan sync:all --year=$CURRENT_YEAR || true
+    php artisan sync:all --year=$PREV_YEAR || true
+    php artisan sync:tarif --year=$CURRENT_YEAR || true
+    php artisan sync:tarif --year=$PREV_YEAR || true
+    php artisan sync:tarif-ulp --year=$CURRENT_YEAR || true
+    php artisan sync:tarif-ulp --year=$PREV_YEAR || true
+    echo "✅ Data sync complete!"
+fi
+
 # Start supervisor
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

@@ -23,6 +23,11 @@ WORKDIR /var/www/html
 # Copy project files
 COPY . .
 
+# Create dummy service account so composer install doesn't fail at build time
+# (real service account will be injected at runtime via GOOGLE_SERVICE_ACCOUNT_BASE64)
+RUN mkdir -p /var/www/html/storage/app/google \
+    && echo '{"type":"service_account","project_id":"placeholder"}' > /var/www/html/storage/app/google/service-account.json
+
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 

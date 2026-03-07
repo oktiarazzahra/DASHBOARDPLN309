@@ -174,13 +174,11 @@
                     
                     <!-- ULP Filter -->
                     <div class="d-flex align-items-center gap-2">
-                        <label style="color: #00695c; font-weight: 600; font-size: 0.875rem;">ULP:</label>
-                        <select id="ulpSelector" class="form-select" style="width: 180px; padding: 0.6rem 0.9rem; font-size: 0.875rem; border: 2px solid #b2dfdb; border-radius: 8px; font-weight: 600; color: #00695c; background: #e0f2f1;">
+                        <label style="color: #00695c; font-weight: 600; font-size: 0.875rem; white-space: nowrap;">ULP:</label>
+                        <select id="ulpSelector" class="form-select" style="width: 200px; padding: 0.6rem 0.9rem; font-size: 0.875rem; border: 2px solid #b2dfdb; border-radius: 8px; font-weight: 600; color: #00695c; background: #e0f2f1;">
                             <option value="">Semua ULP</option>
                             @foreach($ulpList as $ulpItem)
-                            <option value="{{ $ulpItem->ulp_code }}" {{ $ulp == $ulpItem->ulp_code ? 'selected' : '' }}>
-                                {{ $ulpItem->ulp_name }}
-                            </option>
+                            <option value="{{ $ulpItem->ulp_code }}" {{ $ulp == $ulpItem->ulp_code ? 'selected' : '' }}>{{ $ulpItem->ulp_name }}</option>
                             @endforeach
                         </select>
                     </div>

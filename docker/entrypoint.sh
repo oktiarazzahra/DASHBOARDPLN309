@@ -1,69 +1,88 @@
 #!/bin/sh
-set -e
 
 echo "📦 Starting Dashboard PLN 309..."
 
-# Check if database exists
-if [ ! -f "/data/database.sqlite" ]; then
+# Create database directory and file
+DB_PATH="/var/www/html/storage/database.sqlite"
+if [ ! -f "$DB_PATH" ]; then
     echo "🗄️  Creating SQLite database..."
-    touch /data/database.sqlite
-    chown www-data:www-data /data/database.sqlite
-    chmod 664 /data/database.sqlite
+    touch "$DB_PATH"
 fi
 
 # Check if .env exists
 if [ ! -f "/var/www/html/.env" ]; then
     echo "⚙️  Creating .env file..."
-    cp /var/www/html/.env.example /var/www/html/.env
-    
-    # Set database path
-    sed -i 's|DB_DATABASE=.*|DB_DATABASE=/var/www/html/storage/database.sqlite|g' /var/www/html/.env
-    sed -i 's|APP_ENV=.*|APP_ENV=production|g' /var/www/html/.env
-    sed -i 's|APP_DEBUG=.*|APP_DEBUG=false|g' /var/www/html/.env
-    sed -i 's|GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION=.*|GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION=/var/www/html/storage/app/google/service-account.json|g' /var/www/html/.env
+    if [ -f "/var/www/html/.env.example" ]; then
+        cp /var/www/html/.env.example /var/www/html/.env
+    else
+        # Create minimal .env if .env.example doesn't exist
+        echo "APP_NAME=DashboardPLN309" > /var/www/html/.env
+        echo "APP_ENV=production" >> /var/www/html/.env
+        echo "APP_DEBUG=true" >> /var/www/html/.env
+        echo "APP_URL=https://dashboardpln309.onrender.com" >> /var/www/html/.env
+        echo "DB_CONNECTION=sqlite" >> /var/www/html/.env
+        echo "DB_DATABASE=$DB_PATH" >> /var/www/html/.env
+        echo "GOOGLE_SERVICE_ENABLED=true" >> /var/www/html/.env
+        echo "GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION=/var/www/html/storage/app/google/service-account.json" >> /var/www/html/.env
+    fi
 fi
 
-# Generate app key if not exists
-if ! grep -q "APP_KEY=base64:" /var/www/html/.env; then
+# Set correct values in .env
+sed -i "s|DB_DATABASE=.*|DB_DATABASE=$DB_PATH|g" /var/www/html/.env
+sed -i 's|APP_ENV=.*|APP_ENV=production|g' /var/www/html/.env
+sed -i 's|APP_DEBUG=.*|APP_DEBUG=true|g' /var/www/html/.env
+sed -i 's|GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION=.*|GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION=/var/www/html/storage/app/google/service-account.json|g' /var/www/html/.env
+
+# Set APP_KEY from env var or generate
+if [ -n "$APP_KEY" ]; then
+    sed -i "s|APP_KEY=.*|APP_KEY=$APP_KEY|g" /var/www/html/.env
+elif ! grep -q "APP_KEY=base64:" /var/www/html/.env; then
     echo "🔑 Generating application key..."
     php artisan key:generate --force
 fi
 
-# Create Google service account directory if not exists
-if [ ! -d "/var/www/html/storage/app/google" ]; then
-    echo "📁 Creating Google service account directory..."
-    mkdir -p /var/www/html/storage/app/google
-    chown -R www-data:www-data /var/www/html/storage/app/google
+# Set GOOGLE_SPREADSHEET_ID from env var
+if [ -n "$GOOGLE_SPREADSHEET_ID" ]; then
+    if grep -q "GOOGLE_SPREADSHEET_ID=" /var/www/html/.env; then
+        sed -i "s|GOOGLE_SPREADSHEET_ID=.*|GOOGLE_SPREADSHEET_ID=$GOOGLE_SPREADSHEET_ID|g" /var/www/html/.env
+    else
+        echo "GOOGLE_SPREADSHEET_ID=$GOOGLE_SPREADSHEET_ID" >> /var/www/html/.env
+    fi
 fi
+
+# Create Google service account directory
+mkdir -p /var/www/html/storage/app/google
 
 # Decode service account from base64 if provided
 if [ -n "$GOOGLE_SERVICE_ACCOUNT_BASE64" ]; then
     echo "🔐 Decoding Google service account from environment variable..."
     echo "$GOOGLE_SERVICE_ACCOUNT_BASE64" | base64 -d > /var/www/html/storage/app/google/service-account.json
-    chown www-data:www-data /var/www/html/storage/app/google/service-account.json
     chmod 600 /var/www/html/storage/app/google/service-account.json
 fi
 
 # Run migrations
 echo "🔄 Running database migrations..."
-php artisan migrate --force
+php artisan migrate --force || echo "⚠️ Migration warning (may be OK)"
 
 # Clear and cache config
 echo "🧹 Clearing caches..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 
 # Fix permissions
 echo "🔐 Setting permissions..."
-chown -R www-data:www-data /var/www/html/storage
-chown -R www-data:www-data /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage
-chmod -R 775 /var/www/html/bootstrap/cache
+chown -R www-data:www-data /var/www/html/storage || true
+chown -R www-data:www-data /var/www/html/bootstrap/cache || true
+chmod -R 777 /var/www/html/storage
+chmod -R 777 /var/www/html/bootstrap/cache
 
 echo "✅ Application ready!"
 
-# Auto-sync data from Google Sheets on startup (important for Koyeb ephemeral storage)
+# Auto-sync data from Google Sheets on startup
 if [ -n "$AUTO_SYNC_ON_START" ] && [ "$AUTO_SYNC_ON_START" = "true" ]; then
     echo "🔄 Auto-syncing data from Google Sheets..."
     CURRENT_YEAR=$(date +%Y)

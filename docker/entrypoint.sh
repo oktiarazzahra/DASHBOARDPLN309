@@ -2,12 +2,32 @@
 
 echo "📦 Starting Dashboard PLN 309..."
 
+# Create all required directories first
+echo "📁 Creating required directories..."
+mkdir -p /var/www/html/storage/logs
+mkdir -p /var/www/html/storage/framework/cache
+mkdir -p /var/www/html/storage/framework/sessions
+mkdir -p /var/www/html/storage/framework/views
+mkdir -p /var/www/html/storage/app/google
+mkdir -p /var/www/html/bootstrap/cache
+
+# Set permissions FIRST before doing anything else
+echo "🔐 Setting permissions..."
+chown -R www-data:www-data /var/www/html/storage
+chown -R www-data:www-data /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage
+chmod -R 775 /var/www/html/bootstrap/cache
+
 # Create database directory and file
 DB_PATH="/var/www/html/storage/database.sqlite"
 if [ ! -f "$DB_PATH" ]; then
     echo "🗄️  Creating SQLite database..."
     touch "$DB_PATH"
 fi
+
+# Set database permissions
+chmod 666 "$DB_PATH"
+chown www-data:www-data "$DB_PATH"
 
 # Check if .env exists
 if [ ! -f "/var/www/html/.env" ]; then
@@ -50,14 +70,12 @@ if [ -n "$GOOGLE_SPREADSHEET_ID" ]; then
     fi
 fi
 
-# Create Google service account directory
-mkdir -p /var/www/html/storage/app/google
-
 # Decode service account from base64 if provided
 if [ -n "$GOOGLE_SERVICE_ACCOUNT_BASE64" ]; then
     echo "🔐 Decoding Google service account from environment variable..."
     echo "$GOOGLE_SERVICE_ACCOUNT_BASE64" | base64 -d > /var/www/html/storage/app/google/service-account.json
-    chmod 600 /var/www/html/storage/app/google/service-account.json
+    chmod 644 /var/www/html/storage/app/google/service-account.json
+    chown www-data:www-data /var/www/html/storage/app/google/service-account.json
 fi
 
 # Run migrations
@@ -75,12 +93,13 @@ php artisan view:cache || true
 
 # Fix permissions
 echo "🔐 Setting permissions..."
-chown -R www-data:www-data /var/www/html/storage || true
-chown -R www-data:www-data /var/www/html/bootstrap/cache || true
-chmod -R 777 /var/www/html/storage
-chmod -R 777 /var/www/html/bootstrap/cache
-
-echo "✅ Application ready!"
+chRe-set permissions after cache generation
+echo "🔐 Re-setting permissions after cache..."
+chown -R www-data:www-data /var/www/html/storage
+chown -R www-data:www-data /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage
+chmod -R 775 /var/www/html/bootstrap/cache
+chmod 666 "$DB_PATH"
 
 # Auto-sync data from Google Sheets on startup
 if [ -n "$AUTO_SYNC_ON_START" ] && [ "$AUTO_SYNC_ON_START" = "true" ]; then

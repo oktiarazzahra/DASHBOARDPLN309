@@ -64,13 +64,48 @@ class SyncStatusController extends Controller
         $year = $request->get('year', 2025);
         
         try {
-            // Queue the sync commands untuk data ULP
+            // Clear any cache before sync
+            \Cache::flush();
+            
+            // Get count before sync
+            $beforeCustomer = CustomerData::byYear($year)->count();
+            $beforePower = PowerData::byYear($year)->count();
+            $beforeRevenue = RevenueData::byYear($year)->count();
+            
+            // Run sync command and capture output
             \Artisan::call('data:auto-sync', ['--year' => $year]);
+            $output = \Artisan::output();
+            
+            // Get count after sync
+            $afterCustomer = CustomerData::byYear($year)->count();
+            $afterPower = PowerData::byYear($year)->count();
+            $afterRevenue = RevenueData::byYear($year)->count();
+            
+            // Get latest update time
+            $latestUpdate = CustomerData::byYear($year)->latest('updated_at')->first();
             
             return response()->json([
                 'success' => true,
-                'message' => 'ULP data sync triggered successfully',
-                'year' => $year
+                'message' => 'ULP data sync completed',
+                'year' => $year,
+                'timestamp' => now()->toDateTimeString(),
+                'before' => [
+                    'customer' => $beforeCustomer,
+                    'power' => $beforePower,
+                    'revenue' => $beforeRevenue,
+                ],
+                'after' => [
+                    'customer' => $afterCustomer,
+                    'power' => $afterPower,
+                    'revenue' => $afterRevenue,
+                ],
+                'synced' => [
+                    'customer' => $afterCustomer - $beforeCustomer,
+                    'power' => $afterPower - $beforePower,
+                    'revenue' => $afterRevenue - $beforeRevenue,
+                ],
+                'latest_update' => $latestUpdate?->updated_at?->toDateTimeString(),
+                'output' => $output
             ])
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
@@ -78,7 +113,8 @@ class SyncStatusController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sync failed: ' . $e->getMessage()
+                'message' => 'Sync failed: ' . $e->getMessage(),
+                'error_details' => $e->getTraceAsString()
             ], 500)
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')

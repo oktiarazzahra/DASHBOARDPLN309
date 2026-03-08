@@ -1,0 +1,56 @@
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║  🔄 CARA UPDATE DATA - WAJIB BACA INI! 🔄                ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  PENTING: Data TIDAK otomatis update!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 Anda ganti angka di Google Sheets?
+
+   1. ✅ Ganti angka → Tekan Enter → Tunggu 2 detik
+   
+   2. ✅ Buka dashboard: dashboardpln309.onrender.com
+   
+   3. ✅ Klik tombol "🔄 Sync" (pojok kanan atas)
+   
+   4. ✅ Tunggu notifikasi "✓ Sync berhasil!" (1-2 menit)
+   
+   5. ✅ Dashboard otomatis reload → Angka baru muncul!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ JANGAN: Edit → Refresh → Expect angka berubah
+✅ HARUS: Edit → SYNC → Tunggu → Auto-reload → Angka berubah
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 Angka masih lama setelah sync?
+
+   → Tekan: Ctrl + Shift + R (hard refresh)
+   → Atau: Clear browser cache
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 CARA TERCEPAT (Untuk yang sering edit):
+
+   1. Render Dashboard → Service → Shell → Connect
+   
+   2. Edit data di Google Sheets
+   
+   3. Balik ke Shell, ketik:
+      php artisan data:auto-sync --year=2026
+   
+   4. Tunggu output "✓ ... synced: XXX records"
+   
+   5. Refresh dashboard → Angka baru muncul!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 Panduan lengkap: Lihat WORKFLOW_UPDATE_DATA.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

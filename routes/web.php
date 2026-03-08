@@ -3,11 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TarifDashboardController;
+use App\Http\Controllers\DebugController;
 use App\Http\Controllers\Api\SyncStatusController;
 use App\Http\Controllers\Api\TarifSyncStatusController;
 
 // Dashboard Routes
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
+
+// Debug Route - untuk cek data di database tanpa Shell access
+Route::get('/debug-data', [DebugController::class, 'index'])->name('debug.data');
 Route::get('/tarif', [TarifDashboardController::class, 'index'])->name('dashboard.tarif');
 Route::post('/sync-data', [DashboardController::class, 'syncData'])->name('dashboard.sync');
 

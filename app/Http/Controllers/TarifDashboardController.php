@@ -90,13 +90,17 @@ class TarifDashboardController extends Controller
             $tarif->rp_per_kwh = $kwh > 0 ? $rp / $kwh : 0;
         }
         
-        return view('tarif.index', compact(
-            'year',
-            'availableYears',
-            'month',
-            'ulp',
-            'ulpList',
-            'detailData'
-        ));
+        return response()
+            ->view('tarif.index', compact(
+                'year',
+                'availableYears',
+                'month',
+                'ulp',
+                'ulpList',
+                'detailData'
+            ))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 }

@@ -73,25 +73,29 @@ class DebugController extends Controller
         $dbReadable = $dbExists && is_readable($dbPath);
         $dbWritable = $dbExists && is_writable($dbPath);
         
-        return view('debug.index', compact(
-            'year',
-            'availableYears',
-            'customerCount',
-            'powerCount',
-            'revenueCount',
-            'customerTotal',
-            'powerTotal',
-            'revenueTotal',
-            'recentCustomers',
-            'recentPower',
-            'recentRevenue',
-            'customerByUlp',
-            'envCheck',
-            'dbExists',
-            'dbSize',
-            'dbReadable',
-            'dbWritable',
-            'dbPath'
-        ));
+        return response()
+            ->view('debug.index', compact(
+                'year',
+                'availableYears',
+                'customerCount',
+                'powerCount',
+                'revenueCount',
+                'customerTotal',
+                'powerTotal',
+                'revenueTotal',
+                'recentCustomers',
+                'recentPower',
+                'recentRevenue',
+                'customerByUlp',
+                'envCheck',
+                'dbExists',
+                'dbSize',
+                'dbReadable',
+                'dbWritable',
+                'dbPath'
+            ))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 }

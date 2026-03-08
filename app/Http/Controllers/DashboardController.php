@@ -54,21 +54,25 @@ class DashboardController extends Controller
         // Data per ULP untuk table
         $ulps = $this->customerService->getAllUlps($year);
 
-        return view('dashboard.index', compact(
-            'year',
-            'availableYears',
-            'customerStats',
-            'powerStats',
-            'revenueStats',
-            'customerMonths',
-            'customerTotals',
-            'powerMonths',
-            'powerTotals',
-            'customerByUlp',
-            'powerByUlp',
-            'revenueByUlp',
-            'ulps'
-        ));
+        return response()
+            ->view('dashboard.index', compact(
+                'year',
+                'availableYears',
+                'customerStats',
+                'powerStats',
+                'revenueStats',
+                'customerMonths',
+                'customerTotals',
+                'powerMonths',
+                'powerTotals',
+                'customerByUlp',
+                'powerByUlp',
+                'revenueByUlp',
+                'ulps'
+            ))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**

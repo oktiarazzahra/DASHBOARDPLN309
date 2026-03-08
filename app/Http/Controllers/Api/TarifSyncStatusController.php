@@ -58,7 +58,10 @@ class TarifSyncStatusController extends Controller
                 'power' => DB::table('tarif_power_data')->where('year', $year)->count(),
                 'revenue' => DB::table('tarif_revenue_data')->where('year', $year)->count(),
             ]
-        ]);
+        ])
+        ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', '0');
     }
     
     /**
@@ -79,12 +82,18 @@ class TarifSyncStatusController extends Controller
                 'success' => true,
                 'message' => 'Tarif and Tarif ULP sync triggered successfully',
                 'year' => $year
-            ]);
+            ])
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sync failed: ' . $e->getMessage()
-            ], 500);
+            ], 500)
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
         }
     }
 }

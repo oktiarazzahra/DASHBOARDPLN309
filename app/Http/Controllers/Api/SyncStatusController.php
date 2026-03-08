@@ -50,7 +50,10 @@ class SyncStatusController extends Controller
                 'power' => PowerData::byYear($year)->count(),
                 'revenue' => RevenueData::byYear($year)->count(),
             ]
-        ]);
+        ])
+        ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', '0');
     }
     
     /**
@@ -68,12 +71,18 @@ class SyncStatusController extends Controller
                 'success' => true,
                 'message' => 'ULP data sync triggered successfully',
                 'year' => $year
-            ]);
+            ])
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sync failed: ' . $e->getMessage()
-            ], 500);
+            ], 500)
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
         }
     }
 }

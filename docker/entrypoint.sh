@@ -106,12 +106,25 @@ if [ -n "$AUTO_SYNC_ON_START" ] && [ "$AUTO_SYNC_ON_START" = "true" ]; then
     echo "🔄 Auto-syncing data from Google Sheets..."
     CURRENT_YEAR=$(date +%Y)
     PREV_YEAR=$((CURRENT_YEAR - 1))
-    php artisan sync:all --year=$CURRENT_YEAR || true
-    php artisan sync:all --year=$PREV_YEAR || true
+    
+    # Sync data per ULP (Customer, Power, Revenue)
+    echo "📊 Syncing ULP data for $CURRENT_YEAR..."
+    php artisan data:auto-sync --year=$CURRENT_YEAR || true
+    echo "📊 Syncing ULP data for $PREV_YEAR..."
+    php artisan data:auto-sync --year=$PREV_YEAR || true
+    
+    # Sync data per Tarif
+    echo "🏷️  Syncing Tarif data for $CURRENT_YEAR..."
     php artisan sync:tarif --year=$CURRENT_YEAR || true
+    echo "🏷️  Syncing Tarif data for $PREV_YEAR..."
     php artisan sync:tarif --year=$PREV_YEAR || true
+    
+    # Sync data Tarif per ULP
+    echo "🏷️  Syncing Tarif-ULP data for $CURRENT_YEAR..."
     php artisan sync:tarif-ulp --year=$CURRENT_YEAR || true
+    echo "🏷️  Syncing Tarif-ULP data for $PREV_YEAR..."
     php artisan sync:tarif-ulp --year=$PREV_YEAR || true
+    
     echo "✅ Data sync complete!"
 fi
 

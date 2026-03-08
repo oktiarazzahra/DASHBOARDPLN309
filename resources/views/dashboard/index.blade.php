@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Dashboard PLN 309</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -945,7 +948,10 @@
                         </div>
                     </div>
                 `;
-                setTimeout(() => window.location.reload(), 1000);
+                // Force reload dengan bypass cache menggunakan timestamp
+                setTimeout(() => {
+                    location.href = location.origin + location.pathname + '?year=' + year + '&t=' + Date.now();
+                }, 1000);
             } catch (e) {
                 loadingToast.innerHTML = `<div style="color: #ef4444; font-weight: 600;">Sync gagal, coba lagi</div>`;
                 btn.disabled = false;

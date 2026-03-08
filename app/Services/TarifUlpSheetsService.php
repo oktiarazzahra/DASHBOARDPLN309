@@ -20,9 +20,15 @@ class TarifUlpSheetsService
         $this->client->setScopes([Sheets::SPREADSHEETS_READONLY]);
         $this->client->setAuthConfig(storage_path('app/google/service-account.json'));
         
-        // DISABLE CACHE - Force fresh data from Google Sheets
-        $this->client->setCache(new \Google\Client\Cache\MemoryCache());
-        $this->client->setShouldDefer(false);
+        // DISABLE CACHE - Force fresh data dari Google Sheets setiap kali sync
+        $httpClient = new \GuzzleHttp\Client([
+            'headers' => [
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ]
+        ]);
+        $this->client->setHttpClient($httpClient);
         
         $this->spreadsheetId = env('GOOGLE_SPREADSHEET_ID');
         

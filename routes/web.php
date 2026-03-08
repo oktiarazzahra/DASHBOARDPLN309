@@ -12,6 +12,18 @@ Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 
 // Debug Route - untuk cek data di database tanpa Shell access
 Route::get('/debug-data', [DebugController::class, 'index'])->name('debug.data');
+
+// Simple test route
+Route::get('/test', function() {
+    return response()->json([
+        'status' => 'OK',
+        'message' => 'Route working!',
+        'timestamp' => now(),
+        'db_connection' => env('DB_CONNECTION'),
+        'db_path' => env('DB_DATABASE'),
+    ]);
+});
+
 Route::get('/tarif', [TarifDashboardController::class, 'index'])->name('dashboard.tarif');
 Route::post('/sync-data', [DashboardController::class, 'syncData'])->name('dashboard.sync');
 

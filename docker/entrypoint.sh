@@ -87,9 +87,9 @@ echo "🧹 Clearing caches..."
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
+php artisan cache:clear || true
+# Don't cache routes in production to allow dynamic routes
 php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
 
 # Fix permissions
 echo "🔐 Setting permissions..."

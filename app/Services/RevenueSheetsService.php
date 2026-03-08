@@ -25,6 +25,10 @@ class RevenueSheetsService
         $this->client->setScopes([Sheets::SPREADSHEETS_READONLY]);
         $this->client->setAuthConfig(storage_path('app/google/service-account.json'));
         
+        // DISABLE CACHE - Force fresh data from Google Sheets
+        $this->client->setCache(new \Google\Client\Cache\MemoryCache());
+        $this->client->setShouldDefer(false);
+        
         $this->service = new Sheets($this->client);
     }
 

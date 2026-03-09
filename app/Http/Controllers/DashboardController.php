@@ -32,6 +32,15 @@ class DashboardController extends Controller
         
         $availableYears = [2025, 2026];
 
+        // Auto-sync: Ambil data terbaru dari Google Sheets setiap kali halaman dibuka
+        try {
+            $this->customerService->syncToDatabase();
+            $this->powerService->syncToDatabase();
+            $this->revenueService->syncToDatabase();
+        } catch (\Exception $e) {
+            // Lanjut pakai data yang ada di database jika sync gagal
+        }
+
         // Statistik umum
         $customerStats = $this->customerService->getStatistics($year);
         $powerStats = $this->powerService->getStatistics($year);

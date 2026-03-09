@@ -156,9 +156,6 @@
                     <option value="{{ $availableYear }}" {{ $availableYear == $year ? 'selected' : '' }}>{{ $availableYear }}</option>
                     @endforeach
                 </select>
-                <button id="syncNowBtn" onclick="syncNow()" title="Sync data dari spreadsheet sekarang" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: white; border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.875rem; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap;">
-                    <i class="bi bi-arrow-clockwise" id="syncNowIcon"></i> Sync
-                </button>
             </div>
         </div>
     </nav>
@@ -469,84 +466,6 @@
     </div>
 
     <script>
-        // Auto-sync functionality (polling every 5 seconds)
-        let lastUpdate = null;
-        let syncInterval = null;
-        
-        function checkForUpdates() {
-            const year = document.getElementById('yearSelector').value;
-            const params = new URLSearchParams({
-                year: year,
-                last_update: lastUpdate || ''
-            });
-            
-            fetch('/api/tarif/sync-status?' + params)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        lastUpdate = data.last_update;
-                        
-                        // If there are changes, reload the page
-                        if (data.has_changes) {
-                            console.log('Data updated! Reloading...');
-                            location.reload();
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Sync check error:', error);
-                });
-        }
-        
-        // Start polling when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initial check
-            checkForUpdates();
-            
-            // Poll every 5 seconds
-            syncInterval = setInterval(checkForUpdates, 5000);
-        });
-        
-        // Stop polling when page unloads
-        window.addEventListener('beforeunload', function() {
-            if (syncInterval) {
-                clearInterval(syncInterval);
-            }
-        });
-        
-        async function syncNow() {
-            const year = document.getElementById('yearSelector').value;
-            const btn = document.getElementById('syncNowBtn');
-            const icon = document.getElementById('syncNowIcon');
-            
-            btn.disabled = true;
-            icon.style.animation = 'spin 1s linear infinite';
-            
-            // Show loading overlay
-            const overlay = document.getElementById('loadingOverlay');
-            const overlayText = document.getElementById('loadingText');
-            if (overlay) {
-                overlayText.textContent = `Menyinkronkan data ${year}...`;
-                overlay.style.display = 'flex';
-            }
-            
-            try {
-                await fetch('/api/tarif/trigger-sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ year: year })
-                });
-                
-                if (overlayText) overlayText.textContent = '✓ Sync berhasil! Memuat ulang...';
-                setTimeout(() => window.location.reload(), 1000);
-            } catch (e) {
-                if (overlay) overlay.style.display = 'none';
-                btn.disabled = false;
-                icon.style.animation = '';
-                alert('Sync gagal, coba lagi');
-            }
-        }
-
         function changeYear(year) {
             const month = document.getElementById('monthSelector').value;
             const ulp = document.getElementById('ulpSelector').value;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 
 class TarifDashboardController extends Controller
 {
@@ -14,6 +15,14 @@ class TarifDashboardController extends Controller
         $ulp = $request->input('ulp', null);
         
         $availableYears = [2025, 2026];
+
+        // Auto-sync: Ambil data terbaru dari Google Sheets setiap kali halaman dibuka
+        try {
+            Artisan::call('sync:tarif', ['--year' => $year]);
+            Artisan::call('sync:tarif-ulp', ['--year' => $year]);
+        } catch (\Exception $e) {
+            // Lanjut pakai data yang ada di database jika sync gagal
+        }
         
         // Get list of ULP for dropdown
         $ulpList = DB::table('tarif_customer_data')

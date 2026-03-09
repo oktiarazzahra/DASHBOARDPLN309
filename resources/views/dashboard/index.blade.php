@@ -313,16 +313,16 @@
             </div>
         </div>
 
-        <!-- Revenue Charts (kWh & Rp Pendapatan) -->
+        <!-- Revenue Charts (kWh & Rp Pendapatan) - BULANAN -->
         <div class="row g-3 mb-3">
             <div class="col-lg-6">
                 <div class="chart-card" style="padding: 1.25rem; height: 450px;">
                     <div class="mb-2 d-flex justify-content-between align-items-center">
                         <div>
-                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi kWh Jual</div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi kWh Jual (Bulanan)</div>
                             <div style="font-size: 0.75rem; color: #64748b;">Proporsi penjualan energi per ULP (Juta kWh)</div>
                         </div>
-                        <button onclick="downloadChart('kwhChart', 'kwh-jual')" class="btn btn-sm btn-outline-secondary">
+                        <button onclick="downloadChart('kwhChart', 'kwh-jual-bulanan')" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-download"></i>
                         </button>
                     </div>
@@ -336,10 +336,10 @@
                 <div class="chart-card" style="padding: 1.25rem; height: 450px;">
                     <div class="mb-2 d-flex justify-content-between align-items-center">
                         <div>
-                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Rp Pendapatan</div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Rp Pendapatan (Bulanan)</div>
                             <div style="font-size: 0.75rem; color: #64748b;">Proporsi pendapatan per ULP (Milyar)</div>
                         </div>
-                        <button onclick="downloadChart('rpChart', 'rp-pendapatan')" class="btn btn-sm btn-outline-secondary">
+                        <button onclick="downloadChart('rpChart', 'rp-pendapatan-bulanan')" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-download"></i>
                         </button>
                     </div>
@@ -347,6 +347,44 @@
                         <canvas id="rpChart"></canvas>
                     </div>
                     <div id="rpLegend" class="mt-2" style="font-size: 0.75rem; color: #64748b;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Charts (kWh & Rp Pendapatan) - KUMULATIF -->
+        <div class="row g-3 mb-3">
+            <div class="col-lg-6">
+                <div class="chart-card" style="padding: 1.25rem; height: 450px;">
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi kWh Jual (Kumulatif)</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Proporsi kumulatif penjualan energi per ULP (Juta kWh)</div>
+                        </div>
+                        <button onclick="downloadChart('kwhKumulatifChart', 'kwh-jual-kumulatif')" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                    <div style="position: relative; height: 320px;">
+                        <canvas id="kwhKumulatifChart"></canvas>
+                    </div>
+                    <div id="kwhKumulatifLegend" class="mt-2" style="font-size: 0.75rem; color: #64748b;"></div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-card" style="padding: 1.25rem; height: 450px;">
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-size: 0.938rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">Distribusi Rp Pendapatan (Kumulatif)</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Proporsi kumulatif pendapatan per ULP (Milyar)</div>
+                        </div>
+                        <button onclick="downloadChart('rpKumulatifChart', 'rp-pendapatan-kumulatif')" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
+                    <div style="position: relative; height: 320px;">
+                        <canvas id="rpKumulatifChart"></canvas>
+                    </div>
+                    <div id="rpKumulatifLegend" class="mt-2" style="font-size: 0.75rem; color: #64748b;"></div>
                 </div>
             </div>
         </div>
@@ -384,6 +422,7 @@
         const customerByUlp = {!! json_encode($customerByUlp) !!};
         const powerByUlp = {!! json_encode($powerByUlp) !!};
         const revenueByUlp = {!! json_encode($revenueByUlp) !!};
+        const revenueByUlpKumulatif = {!! json_encode($revenueByUlpKumulatif) !!};
         
         // Modern teal/turquoise color palette (inspired by finance dashboard)
         const colors = [
@@ -559,13 +598,21 @@
             powerChart.data.datasets[0].data = powerByUlp.map(ulp => ulp.data[monthIndex] / 1000);
             powerChart.update();
             
-            // Update kWh Chart (Pie) - show proportions for selected month
+            // Update kWh Chart (Bulanan) - show proportions for selected month
             kwhChart.data.datasets[0].data = revenueByUlp.map(ulp => ulp.kwh_data[monthIndex]);
             kwhChart.update();
             
-            // Update Rp Chart (Pie) - show proportions for selected month
+            // Update Rp Chart (Bulanan) - show proportions for selected month
             rpChart.data.datasets[0].data = revenueByUlp.map(ulp => ulp.rp_data[monthIndex] / 1000000000);
             rpChart.update();
+            
+            // Update kWh Chart (Kumulatif) - show proportions for selected month
+            kwhKumulatifChart.data.datasets[0].data = revenueByUlpKumulatif.map(ulp => ulp.kwh_data[monthIndex]);
+            kwhKumulatifChart.update();
+            
+            // Update Rp Chart (Kumulatif) - show proportions for selected month
+            rpKumulatifChart.data.datasets[0].data = revenueByUlpKumulatif.map(ulp => ulp.rp_data[monthIndex] / 1000000000);
+            rpKumulatifChart.update();
             
             // Update summary table for selected month
             updateSummaryTableForMonth(monthIndex);
@@ -772,6 +819,143 @@
                 datasets: [{
                     label: 'Rp Pendapatan',
                     data: revenueByUlp.map(ulp => ulp.rp_data[11] / 1000000000), // December data in Milyar
+                    backgroundColor: colors,
+                    borderColor: colors,
+                    borderWidth: 0,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        display: false
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 12,
+                        titleFont: { size: 13, weight: '600' },
+                        bodyFont: { size: 12 },
+                        callbacks: {
+                            label: function(context) {
+                                return 'Rp ' + context.parsed.y.toLocaleString('id-ID', {maximumFractionDigits: 2}) + ' M';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { 
+                            color: '#64748b',
+                            font: { size: 11, weight: '500' },
+                            maxRotation: 45,
+                            minRotation: 0
+                        },
+                        border: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { 
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 11 },
+                            callback: function(value) {
+                                return 'Rp ' + value.toFixed(0) + 'M';
+                            }
+                        },
+                        border: { display: false }
+                    }
+                }
+            }
+        });
+
+        // kWh Kumulatif Chart - Vertical Bar (Comparison for December initially)
+        const kwhKumulatifCtx = document.getElementById('kwhKumulatifChart').getContext('2d');
+        
+        const kwhKumulatifChart = new Chart(kwhKumulatifCtx, {
+            type: 'bar',
+            data: {
+                labels: revenueByUlpKumulatif.map(ulp => ulp.ulp_name.replace(/^ULP\s+/i, '')),
+                datasets: [{
+                    label: 'kWh Jual (Kumulatif)',
+                    data: revenueByUlpKumulatif.map(ulp => ulp.kwh_data[11]), // December data
+                    backgroundColor: colors,
+                    borderColor: colors,
+                    borderWidth: 0,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        display: false
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 12,
+                        titleFont: { size: 13, weight: '600' },
+                        bodyFont: { size: 12 },
+                        callbacks: {
+                            label: function(context) {
+                                const valueInM = (context.parsed.y / 1000000).toFixed(2);
+                                return valueInM + ' M kWh';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { 
+                            color: '#64748b',
+                            font: { size: 11, weight: '500' },
+                            maxRotation: 45,
+                            minRotation: 0
+                        },
+                        border: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { 
+                            color: '#f1f5f9',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 11 },
+                            callback: function(value) {
+                                return (value / 1000000).toFixed(0) + 'M';
+                            }
+                        },
+                        border: { display: false }
+                    }
+                }
+            }
+        });
+
+        // Rp Pendapatan Kumulatif Chart - Vertical Bar (Comparison for December initially)
+        const rpKumulatifCtx = document.getElementById('rpKumulatifChart').getContext('2d');
+        
+        const rpKumulatifChart = new Chart(rpKumulatifCtx, {
+            type: 'bar',
+            data: {
+                labels: revenueByUlpKumulatif.map(ulp => ulp.ulp_name.replace(/^ULP\s+/i, '')),
+                datasets: [{
+                    label: 'Rp Pendapatan (Kumulatif)',
+                    data: revenueByUlpKumulatif.map(ulp => ulp.rp_data[11] / 1000000000), // December data in Milyar
                     backgroundColor: colors,
                     borderColor: colors,
                     borderWidth: 0,

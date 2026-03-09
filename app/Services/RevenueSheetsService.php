@@ -273,7 +273,7 @@ class RevenueSheetsService
     }
     
     /**
-     * Ambil data chart per ULP
+     * Ambil data chart per ULP (BULANAN)
      */
     public function getChartDataByUlp($year = null)
     {
@@ -303,4 +303,37 @@ class RevenueSheetsService
         
         return $result;
     }
+
+    /**
+     * Ambil data chart per ULP (KUMULATIF)
+     */
+    public function getChartDataByUlpKumulatif($year = null)
+    {
+        $year = $year ?? 2025;
+        $monthOrder = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        
+        $ulps = $this->getAllUlps($year);
+        $result = [];
+        
+        foreach ($ulps as $ulp) {
+            $data = RevenueData::byYear($year)
+                ->byUlp($ulp->ulp_code)
+                ->kumulatif()
+                ->get()
+                ->sortBy(function($item) use ($monthOrder) {
+                    return array_search($item->month, $monthOrder);
+                });
+            
+            $result[] = [
+                'ulp_code' => $ulp->ulp_code,
+                'ulp_name' => $ulp->ulp_name,
+                'kwh_data' => $data->pluck('kwh_jual')->toArray(),
+                'rp_data' => $data->pluck('rp_pendapatan')->toArray(),
+                'months' => $data->pluck('month')->toArray()
+            ];
+        }
+        
+        return $result;
+    }
 }
+

@@ -50,6 +50,7 @@ class DashboardController extends Controller
         $customerByUlp = $this->customerService->getChartDataByUlp($year);
         $powerByUlp = $this->powerService->getChartDataByUlp($year);
         $revenueByUlp = $this->revenueService->getChartDataByUlp($year);
+        $revenueByUlpKumulatif = $this->revenueService->getChartDataByUlpKumulatif($year);
 
         // Data per ULP untuk table
         $ulps = $this->customerService->getAllUlps($year);
@@ -68,6 +69,7 @@ class DashboardController extends Controller
                 'customerByUlp',
                 'powerByUlp',
                 'revenueByUlp',
+                'revenueByUlpKumulatif',
                 'ulps'
             ))
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')

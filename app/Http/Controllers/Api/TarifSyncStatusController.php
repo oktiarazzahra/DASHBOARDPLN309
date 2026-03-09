@@ -74,14 +74,26 @@ class TarifSyncStatusController extends Controller
         try {
             // Run the tarif sync command (data per tarif)
             \Artisan::call('sync:tarif', ['--year' => $year]);
+            $tarifOutput = \Artisan::output();
             
             // Run the tarif per ULP sync command
             \Artisan::call('sync:tarif-ulp', ['--year' => $year]);
+            $tarifUlpOutput = \Artisan::output();
+
+            // Get counts after sync
+            $afterCustomer = DB::table('tarif_customer_data')->where('year', $year)->count();
+            $afterPower = DB::table('tarif_power_data')->where('year', $year)->count();
+            $afterRevenue = DB::table('tarif_revenue_data')->where('year', $year)->count();
             
             return response()->json([
                 'success' => true,
                 'message' => 'Tarif and Tarif ULP sync triggered successfully',
-                'year' => $year
+                'year' => $year,
+                'after' => [
+                    'customer' => $afterCustomer,
+                    'power' => $afterPower,
+                    'revenue' => $afterRevenue,
+                ]
             ])
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')

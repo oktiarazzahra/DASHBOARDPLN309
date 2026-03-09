@@ -1210,6 +1210,7 @@
         // Update sync indicator
         function updateSyncIndicator(status, message = 'Data terkini') {
             const indicator = document.getElementById('syncIndicator');
+            if (!indicator) return; // elemen tidak ada, skip
             if (status === 'checking') {
                 indicator.className = 'sync-indicator syncing';
                 indicator.innerHTML = `

@@ -640,7 +640,7 @@
                 
                 customersData.push(monthCustomers.toLocaleString('id-ID'));
                 powerData.push(monthPower.toLocaleString('id-ID', {maximumFractionDigits: 0}));
-                kwhData.push((monthKwh / 1000000).toFixed(2) + ' M');
+                kwhData.push((monthKwh / 1000000).toFixed(2) + ' Juta');
                 rpData.push('Rp ' + (monthRp / 1000000000).toFixed(2) + ' M');
                 rpPerKwhData.push('Rp ' + rpPerKwh.toLocaleString('id-ID', {maximumFractionDigits: 0}));
             });
@@ -774,7 +774,7 @@
                         callbacks: {
                             label: function(context) {
                                 const valueInM = (context.parsed.y / 1000000).toFixed(2);
-                                return valueInM + ' M kWh';
+                                return valueInM + ' Juta kWh';
                             }
                         }
                     }
@@ -800,7 +800,7 @@
                             color: '#64748b',
                             font: { size: 11 },
                             callback: function(value) {
-                                return (value / 1000000).toFixed(0) + 'M';
+                                return (value / 1000000).toFixed(0) + ' Juta';
                             }
                         },
                         border: { display: false }
@@ -911,7 +911,7 @@
                         callbacks: {
                             label: function(context) {
                                 const valueInM = (context.parsed.y / 1000000).toFixed(2);
-                                return valueInM + ' M kWh';
+                                return valueInM + ' Juta kWh';
                             }
                         }
                     }
@@ -937,7 +937,7 @@
                             color: '#64748b',
                             font: { size: 11 },
                             callback: function(value) {
-                                return (value / 1000000).toFixed(0) + 'M';
+                                return (value / 1000000).toFixed(0) + ' Juta';
                             }
                         },
                         border: { display: false }
@@ -1056,7 +1056,7 @@
                 
                 customersData.push(latestCustomers.toLocaleString('id-ID'));
                 powerData.push(latestPower.toLocaleString('id-ID', {maximumFractionDigits: 0}));
-                kwhData.push((latestKwh / 1000000).toFixed(2) + ' M');
+                kwhData.push((latestKwh / 1000000).toFixed(2) + ' Juta');
                 rpData.push('Rp ' + (latestRp / 1000000000).toFixed(2) + ' M');
                 rpPerKwhData.push('Rp ' + rpPerKwh.toLocaleString('id-ID', {maximumFractionDigits: 0}));
             });
@@ -1104,14 +1104,14 @@
                     <div class="spinner-border spinner-border-sm" style="color: #17a2b8;" role="status"></div>
                     <div>
                         <div style="font-weight: 600; color: #0f172a; font-size: 0.875rem;">Menyinkronkan data ${year}...</div>
-                        <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">Mengambil data terbaru dari spreadsheet</div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">Membaca spreadsheet, harap tunggu...</div>
                     </div>
                 </div>
             `;
             document.getElementById('toastContainer').appendChild(loadingToast);
             
             try {
-                await Promise.all([
+                const [ulpRes, tarifRes] = await Promise.all([
                     fetch('/api/trigger-sync', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
@@ -1123,24 +1123,55 @@
                         body: JSON.stringify({ year: year })
                     })
                 ]);
-                
+
+                const ulpData = await ulpRes.json();
+                const tarifData = await tarifRes.json();
+
+                const ulpOk = ulpRes.ok && ulpData.success === true;
+                const tarifOk = tarifRes.ok && tarifData.success === true;
+
+                if (!ulpOk || !tarifOk) {
+                    const errMsg = (!ulpOk ? (ulpData.message || 'Sync ULP gagal') : '') +
+                                  (!tarifOk ? (tarifData.message || ' | Sync Tarif gagal') : '');
+                    throw new Error(errMsg);
+                }
+
+                // Verifikasi: pastikan data benar-benar terbaca (customer, power, revenue > 0)
+                const after = ulpData.after || {};
+                if ((after.customer || 0) === 0 && (after.power || 0) === 0 && (after.revenue || 0) === 0) {
+                    throw new Error('Data kosong setelah sync — spreadsheet mungkin tidak terbaca');
+                }
+
+                const custCount = after.customer || '-';
+                const powerCount = after.power || '-';
+                const revCount = after.revenue || '-';
+
                 loadingToast.innerHTML = `
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-check-circle-fill" style="color: #10b981; font-size: 1.25rem;"></i>
                         <div>
                             <div style="font-weight: 600; color: #0f172a; font-size: 0.875rem;">✓ Sync berhasil! Memuat ulang...</div>
+                            <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">Customer: ${custCount} | Daya: ${powerCount} | Revenue: ${revCount} records</div>
                         </div>
                     </div>
                 `;
                 // Force reload dengan bypass cache menggunakan timestamp
                 setTimeout(() => {
                     location.href = location.origin + location.pathname + '?year=' + year + '&t=' + Date.now();
-                }, 1000);
+                }, 1500);
             } catch (e) {
-                loadingToast.innerHTML = `<div style="color: #ef4444; font-weight: 600;">Sync gagal, coba lagi</div>`;
+                loadingToast.innerHTML = `
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-x-circle-fill" style="color: #ef4444; font-size: 1.25rem;"></i>
+                        <div>
+                            <div style="font-weight: 600; color: #ef4444; font-size: 0.875rem;">Sync gagal!</div>
+                            <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">${e.message || 'Coba lagi'}</div>
+                        </div>
+                    </div>
+                `;
                 btn.disabled = false;
                 icon.style.animation = '';
-                setTimeout(() => loadingToast.remove(), 2000);
+                setTimeout(() => loadingToast.remove(), 4000);
             }
         }
 

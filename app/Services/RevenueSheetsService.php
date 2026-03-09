@@ -104,6 +104,13 @@ class RevenueSheetsService
                 return 0;
             }
 
+            // DELETE data lama untuk semua tahun yang ditemukan SEBELUM insert
+            // Ini memastikan data yang sudah dihapus di spreadsheet juga terhapus di database
+            foreach ($bulaanSections as $section) {
+                $deletedCount = RevenueData::where('year', $section['year'])->delete();
+                Log::info("Deleted {$deletedCount} old revenue records for year {$section['year']}");
+            }
+
             // Process setiap section BULANAN (2025, 2026, dst)
             foreach ($bulaanSections as $sectionIndex => $section) {
                 $year = $section['year'];

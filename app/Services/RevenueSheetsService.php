@@ -112,16 +112,18 @@ class RevenueSheetsService
                 
                 // Tentukan batas akhir section (sampai KOMULATIF atau section berikutnya)
                 $endIndex = count($data);
+                $kumulatifStartIndex = null;
                 for ($j = $headerRowIndex + 1; $j < count($data); $j++) {
                     if (isset($data[$j][0]) && strtoupper(trim($data[$j][0])) === 'KOMULATIF') {
                         $endIndex = $j;
+                        $kumulatifStartIndex = $j;
                         break;
                     }
                 }
                 
                 Log::info("Processing BULANAN section for year {$year}, rows " . ($headerRowIndex + 2) . " to {$endIndex}");
                 
-                // Process data ULP dalam section ini
+                // Process data ULP dalam section BULANAN
                 for ($i = $headerRowIndex + 2; $i < $endIndex; $i++) {
                     $row = $data[$i];
                     
@@ -190,6 +192,80 @@ class RevenueSheetsService
                             ]
                         );
                         $syncedCount++;
+                    }
+                }
+
+                // Process KOMULATIF section for same year
+                if ($kumulatifStartIndex !== null) {
+                    $kumulatifDataType = 'kumulatif';
+                    
+                    // Tentukan batas akhir section KOMULATIF
+                    $kumulatifEndIndex = count($data);
+                    // Next BULANAN or next year title marks end of kumulatif section
+                    for ($j = $kumulatifStartIndex + 1; $j < count($data); $j++) {
+                        $cellVal = isset($data[$j][0]) ? strtoupper(trim($data[$j][0])) : '';
+                        if ($cellVal === 'BULANAN' || preg_match('/KWH JUAL.*\d{4}/', $cellVal)) {
+                            $kumulatifEndIndex = $j;
+                            break;
+                        }
+                    }
+                    
+                    Log::info("Processing KOMULATIF section for year {$year}, rows " . ($kumulatifStartIndex + 2) . " to {$kumulatifEndIndex}");
+                    
+                    // Process data ULP dalam section KOMULATIF
+                    for ($i = $kumulatifStartIndex + 2; $i < $kumulatifEndIndex; $i++) {
+                        $row = $data[$i];
+                        
+                        // Skip empty rows
+                        if (empty($row[0]) || trim($row[0]) === '') {
+                            continue;
+                        }
+
+                        // Skip UP3 BALIKPAPAN total row
+                        if (isset($row[0]) && strtoupper(trim($row[0])) === 'UP3 BALIKPAPAN') {
+                            continue;
+                        }
+
+                        $ulpCode = isset($row[0]) ? trim($row[0]) : null;
+                        $ulpName = isset($row[1]) ? trim($row[1]) : null;
+
+                        if (!$ulpCode || !$ulpName) {
+                            continue;
+                        }
+
+                        if (!is_numeric($ulpCode)) {
+                            continue;
+                        }
+
+                        for ($monthIndex = 0; $monthIndex < 12; $monthIndex++) {
+                            $kwhColumn = $monthIndex + 2;
+                            $kwhJual = isset($row[$kwhColumn]) ? 
+                                (int)str_replace([',', '.'], '', trim($row[$kwhColumn])) : 0;
+                            
+                            $rpColumn = $monthIndex + 18;
+                            $rpPendapatan = isset($row[$rpColumn]) ? 
+                                (int)str_replace([',', '.'], '', trim($row[$rpColumn])) : 0;
+                            
+                            $rpPerKwhColumn = $monthIndex + 34;
+                            $rpPerKwhRaw = isset($row[$rpPerKwhColumn]) ? trim($row[$rpPerKwhColumn]) : '0';
+                            $rpPerKwh = (float)str_replace(',', '.', str_replace('.', '', $rpPerKwhRaw));
+
+                            RevenueData::updateOrCreate(
+                                [
+                                    'ulp_code' => $ulpCode,
+                                    'month' => $months[$monthIndex],
+                                    'year' => $year,
+                                    'data_type' => $kumulatifDataType,
+                                ],
+                                [
+                                    'ulp_name' => $ulpName,
+                                    'kwh_jual' => $kwhJual,
+                                    'rp_pendapatan' => $rpPendapatan,
+                                    'rp_per_kwh' => $rpPerKwh,
+                                ]
+                            );
+                            $syncedCount++;
+                        }
                     }
                 }
             }

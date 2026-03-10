@@ -91,9 +91,7 @@ php artisan cache:clear || true
 # Don't cache routes in production to allow dynamic routes
 php artisan config:cache || true
 
-# Fix permissions
-echo "🔐 Setting permissions..."
-chRe-set permissions after cache generation
+# Fix permissions after cache generation
 echo "🔐 Re-setting permissions after cache..."
 chown -R www-data:www-data /var/www/html/storage
 chown -R www-data:www-data /var/www/html/bootstrap/cache
@@ -101,35 +99,40 @@ chmod -R 775 /var/www/html/storage
 chmod -R 775 /var/www/html/bootstrap/cache
 chmod 666 "$DB_PATH"
 
-# Auto-sync data from Google Sheets on startup
-if [ -n "$AUTO_SYNC_ON_START" ] && [ "$AUTO_SYNC_ON_START" = "true" ]; then
-    echo "🔄 Auto-syncing data from Google Sheets..."
-    CURRENT_YEAR=$(date +%Y)
-    PREV_YEAR=$((CURRENT_YEAR - 1))
-    
-    # Sync data per ULP (Customer, Power, Revenue)
-    echo "📊 Syncing ULP data for $CURRENT_YEAR..."
-    php artisan data:auto-sync --year=$CURRENT_YEAR || true
-    echo "📊 Syncing ULP data for $PREV_YEAR..."
-    php artisan data:auto-sync --year=$PREV_YEAR || true
-    
-    # Sync data per Tarif
-    echo "🏷️  Syncing Tarif data for $CURRENT_YEAR..."
-    php artisan sync:tarif --year=$CURRENT_YEAR || true
-    echo "🏷️  Syncing Tarif data for $PREV_YEAR..."
-    php artisan sync:tarif --year=$PREV_YEAR || true
-    
-    # Sync data Tarif per ULP
-    echo "🏷️  Syncing Tarif-ULP data for $CURRENT_YEAR..."
-    php artisan sync:tarif-ulp --year=$CURRENT_YEAR || true
-    echo "🏷️  Syncing Tarif-ULP data for $PREV_YEAR..."
-    php artisan sync:tarif-ulp --year=$PREV_YEAR || true
-    
-    echo "✅ Data sync complete!"
+# Start web server DULU agar Render tidak 502 saat startup
+# Sync data dijalankan di background setelah server siap
+echo "🚀 Starting web server..."
+/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf &
+SUPERVISORD_PID=$!
 
-    # Set cache flag agar page load pertama tidak sync lagi
-    php artisan tinker --execute="Cache::put('last_sync_ulp', now()->timestamp, 300); Cache::put('last_sync_tarif', now()->timestamp, 300);" 2>/dev/null || true
+# Tunggu PHP-FPM dan Nginx siap (3 detik)
+sleep 3
+
+# Auto-sync data di BACKGROUND (tidak memblokir web server)
+if [ -n "$AUTO_SYNC_ON_START" ] && [ "$AUTO_SYNC_ON_START" = "true" ]; then
+    echo "🔄 Starting background data sync from Google Sheets..."
+    (
+        CURRENT_YEAR=$(date +%Y)
+        PREV_YEAR=$((CURRENT_YEAR - 1))
+
+        echo "📊 Syncing ULP data..."
+        php artisan data:auto-sync --year=$CURRENT_YEAR || true
+        php artisan data:auto-sync --year=$PREV_YEAR || true
+
+        echo "🏷️  Syncing Tarif data..."
+        php artisan sync:tarif --year=$CURRENT_YEAR || true
+        php artisan sync:tarif --year=$PREV_YEAR || true
+
+        echo "🏷️  Syncing Tarif-ULP data..."
+        php artisan sync:tarif-ulp --year=$CURRENT_YEAR || true
+        php artisan sync:tarif-ulp --year=$PREV_YEAR || true
+
+        echo "✅ Background data sync complete!"
+
+        # Set cache flag agar page load tidak sync lagi segera
+        php artisan tinker --execute="Cache::put('last_sync_ulp', now()->timestamp, 300); Cache::put('last_sync_tarif', now()->timestamp, 300);" 2>/dev/null || true
+    ) &
 fi
 
-# Start supervisor
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# Tunggu supervisord selesai (jaga container tetap hidup)
+wait $SUPERVISORD_PID

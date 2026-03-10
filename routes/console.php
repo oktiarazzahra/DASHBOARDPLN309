@@ -8,6 +8,15 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Auto-sync data setiap 5 menit (bisa diubah sesuai kebutuhan)
-Schedule::command('data:auto-sync --year=2025')->everyFiveMinutes()->withoutOverlapping();
-Schedule::command('data:auto-sync --year=2026')->everyFiveMinutes()->withoutOverlapping();
+// Auto-sync data dari Google Sheets setiap 10 menit
+// Data Per ULP (Customer, Power, Revenue)
+Schedule::command('data:auto-sync --year=2025')->everyTenMinutes()->withoutOverlapping();
+Schedule::command('data:auto-sync --year=2026')->everyTenMinutes()->withoutOverlapping();
+
+// Data Per Tarif
+Schedule::command('sync:tarif --year=2025')->everyTenMinutes()->withoutOverlapping();
+Schedule::command('sync:tarif --year=2026')->everyTenMinutes()->withoutOverlapping();
+
+// Data Tarif Per ULP
+Schedule::command('sync:tarif-ulp --year=2025')->everyTenMinutes()->withoutOverlapping();
+Schedule::command('sync:tarif-ulp --year=2026')->everyTenMinutes()->withoutOverlapping();

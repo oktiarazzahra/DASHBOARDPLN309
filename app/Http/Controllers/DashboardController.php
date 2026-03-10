@@ -7,7 +7,6 @@ use App\Services\PowerSheetsService;
 use App\Services\RevenueSheetsService;
 use App\Models\CustomerData;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -34,18 +33,8 @@ class DashboardController extends Controller
         
         $availableYears = [2025, 2026];
 
-        // Auto-sync: hanya jika data sudah stale (>5 menit) agar halaman tidak timeout
-        $cacheKey = 'last_sync_ulp';
-        if (!Cache::has($cacheKey)) {
-            try {
-                $this->customerService->syncToDatabase();
-                $this->powerService->syncToDatabase();
-                $this->revenueService->syncToDatabase();
-                Cache::put($cacheKey, now()->timestamp, 300); // 5 menit
-            } catch (\Exception $e) {
-                // Lanjut pakai data yang ada di database jika sync gagal
-            }
-        }
+        // Data sync otomatis dihandle oleh background scheduler (setiap 10 menit)
+        // Controller hanya membaca dari database
 
         // Statistik umum
         $customerStats = $this->customerService->getStatistics($year);

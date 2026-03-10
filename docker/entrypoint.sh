@@ -126,6 +126,9 @@ if [ -n "$AUTO_SYNC_ON_START" ] && [ "$AUTO_SYNC_ON_START" = "true" ]; then
     php artisan sync:tarif-ulp --year=$PREV_YEAR || true
     
     echo "✅ Data sync complete!"
+
+    # Set cache flag agar page load pertama tidak sync lagi
+    php artisan tinker --execute="Cache::put('last_sync_ulp', now()->timestamp, 300); Cache::put('last_sync_tarif', now()->timestamp, 300);" 2>/dev/null || true
 fi
 
 # Start supervisor

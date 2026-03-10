@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Services\CustomerSheetsService;
 use App\Services\PowerSheetsService;
 use App\Services\RevenueSheetsService;
+use App\Models\CustomerData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -32,13 +34,17 @@ class DashboardController extends Controller
         
         $availableYears = [2025, 2026];
 
-        // Auto-sync: Ambil data terbaru dari Google Sheets setiap kali halaman dibuka
-        try {
-            $this->customerService->syncToDatabase();
-            $this->powerService->syncToDatabase();
-            $this->revenueService->syncToDatabase();
-        } catch (\Exception $e) {
-            // Lanjut pakai data yang ada di database jika sync gagal
+        // Auto-sync: hanya jika data sudah stale (>5 menit) agar halaman tidak timeout
+        $cacheKey = 'last_sync_ulp';
+        if (!Cache::has($cacheKey)) {
+            try {
+                $this->customerService->syncToDatabase();
+                $this->powerService->syncToDatabase();
+                $this->revenueService->syncToDatabase();
+                Cache::put($cacheKey, now()->timestamp, 300); // 5 menit
+            } catch (\Exception $e) {
+                // Lanjut pakai data yang ada di database jika sync gagal
+            }
         }
 
         // Statistik umum
